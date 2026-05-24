@@ -1,7 +1,10 @@
 'use client';
+import dynamic from 'next/dynamic';
 import { Accordion } from '@/components/ui/accordion';
 import { AccordionSection } from '@/components/accordion-section';
-import { ApiKeysPanel } from '@/components/api-keys-panel';
+
+const ApiKeysPanel = dynamic(() => import('@/components/api-keys-panel').then((m) => m.ApiKeysPanel), { ssr: false });
+const DepositPanel = dynamic(() => import('@/components/deposit-panel').then((m) => m.DepositPanel), { ssr: false });
 
 export default function BuyPage() {
   return (
@@ -21,8 +24,13 @@ export default function BuyPage() {
           <ApiKeysPanel />
         </AccordionSection>
 
-        <AccordionSection value="s2" number={2} title="Fund Your Account and Set Your Budget" subtitle="USDC on Solana — phase 4 wires this up.">
-          <div className="text-sm text-text-dim">Coming online in phase 4.</div>
+        <AccordionSection
+          value="s2"
+          number={2}
+          title="Fund Your Account and Set Your Budget"
+          subtitle="USDC on Solana. Balance is debited per request at the seller's quoted price."
+        >
+          <DepositPanel />
         </AccordionSection>
 
         <AccordionSection value="s3" number={3} title="Router Settings (optional)" subtitle="Priority and fallback providers — phase 9.">
