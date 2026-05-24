@@ -21,6 +21,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           accentColor: '#22d3ee',
           logo: '/logo.svg',
           walletChainType: 'solana-only',
+          walletList: ['phantom', 'solflare'],
         },
         embeddedWallets: {
           solana: { createOnLogin: 'users-without-wallets' },
