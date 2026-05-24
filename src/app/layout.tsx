@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
+import { Suspense } from 'react';
 import { Providers } from '@/components/providers';
 import { Nav } from '@/components/nav';
 import { Toaster } from 'sonner';
@@ -19,7 +20,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${inter.variable} ${mono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <Providers>
-          <Nav />
+          <Suspense fallback={<div className="h-16 border-b border-border" />}>
+            <Nav />
+          </Suspense>
           <main className="flex-1">{children}</main>
           <Toaster theme="dark" position="bottom-right" toastOptions={{ style: { background: '#0f1525', border: '1px solid #243056', color: '#e5e7eb' } }} />
         </Providers>
