@@ -6,6 +6,8 @@ import { AccordionSection } from '@/components/accordion-section';
 const ApiKeysPanel = dynamic(() => import('@/components/api-keys-panel').then((m) => m.ApiKeysPanel), { ssr: false });
 const DepositPanel = dynamic(() => import('@/components/deposit-panel').then((m) => m.DepositPanel), { ssr: false });
 const RouterConfigPanel = dynamic(() => import('@/components/router-config-panel').then((m) => m.RouterConfigPanel), { ssr: false });
+const QuickstartCodeBlocks = dynamic(() => import('@/components/quickstart-code-blocks').then((m) => m.QuickstartCodeBlocks), { ssr: false });
+const SavingsPanel = dynamic(() => import('@/components/savings-panel').then((m) => m.SavingsPanel), { ssr: false });
 
 export default function BuyPage() {
   return (
@@ -43,12 +45,22 @@ export default function BuyPage() {
           <RouterConfigPanel />
         </AccordionSection>
 
-        <AccordionSection value="s4" number={4} title="Quick Start" subtitle="Curl, OpenAI SDK, Anthropic SDK, Claude Code — phase 12.">
-          <div className="text-sm text-text-dim">Coming online in phase 12.</div>
+        <AccordionSection
+          value="s4"
+          number={4}
+          title="Quick Start"
+          subtitle="Drop your key into curl, the OpenAI SDK, the Anthropic SDK, or Claude Code."
+        >
+          <QuickstartCodeBlocks />
         </AccordionSection>
 
-        <AccordionSection value="s5" number={5} title="Your Savings and Purchases" subtitle="Stat tiles + purchase log — phase 10.">
-          <div className="text-sm text-text-dim">Coming online in phase 10.</div>
+        <AccordionSection
+          value="s5"
+          number={5}
+          title="Your Savings and Purchases"
+          subtitle="Every request, what you paid, and what you would&apos;ve paid going direct."
+        >
+          <SavingsPanel />
         </AccordionSection>
       </Accordion>
     </div>
