@@ -8,7 +8,7 @@ export function proxy(req: NextRequest) {
   const token = req.cookies.get('privy-token')?.value;
   if (token) return NextResponse.next();
   const url = req.nextUrl.clone();
-  url.pathname = '/';
+  url.pathname = '/markets';
   url.searchParams.set('login', '1');
   return NextResponse.redirect(url);
 }

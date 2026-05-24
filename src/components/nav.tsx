@@ -9,7 +9,7 @@ import { Zap, LogOut } from 'lucide-react';
 const TABS = [
   { href: '/buy', label: 'Buy' },
   { href: '/sell', label: 'Sell' },
-  { href: '/marketplace', label: 'Marketplace' },
+  { href: '/markets', label: 'Marketplace' },
 ] as const;
 
 export function Nav() {
@@ -32,7 +32,7 @@ export function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-6">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/markets" className="flex items-center gap-2 group">
           <div className="relative">
             <Zap className="h-5 w-5 text-accent transition-transform group-hover:scale-110" />
             <div className="absolute inset-0 blur-md bg-accent/50 -z-10" />
