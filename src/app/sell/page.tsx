@@ -1,8 +1,8 @@
 'use client';
-import dynamic from 'next/dynamic';
-
-const SellerOffersPanel = dynamic(() => import('@/components/seller-offers').then((m) => m.SellerOffersPanel), { ssr: false });
-const SellerEarnings = dynamic(() => import('@/components/seller-earnings').then((m) => m.SellerEarnings), { ssr: false });
+import { ClientOnly } from '@/components/client-only';
+import { NeedsPrivy } from '@/components/needs-privy';
+import { SellerOffersPanel } from '@/components/seller-offers';
+import { SellerEarnings } from '@/components/seller-earnings';
 
 export default function SellPage() {
   return (
@@ -15,27 +15,17 @@ export default function SellPage() {
       </header>
 
       <div className="flex flex-col gap-6">
-        <Section
-          n={1}
-          title="Create offers"
-          subtitle="Pick a model, set your USDC price per million tokens, paste an upstream API key."
-        >
-          <SellerOffersPanel />
+        <Section n={1} title="Create offers" subtitle="Pick a model, set your USDC price per million tokens, paste an upstream API key.">
+          <ClientOnly fallback={<Skel />}><SellerOffersPanel /></ClientOnly>
         </Section>
 
-        <Section
-          n={2}
-          title="Earnings"
-          subtitle="USDC credits accrue with every routed request. Withdraw any time."
-        >
-          <SellerEarnings />
+        <Section n={2} title="Earnings" subtitle="USDC credits accrue with every routed request. Withdraw any time.">
+          <NeedsPrivy>
+            <ClientOnly fallback={<Skel />}><SellerEarnings /></ClientOnly>
+          </NeedsPrivy>
         </Section>
 
-        <Section
-          n={3}
-          title="How routing works"
-          subtitle="Buyers' requests land on the cheapest healthy offer for the model they call."
-        >
+        <Section n={3} title="How routing works" subtitle="Buyers' requests land on the cheapest healthy offer for the model they call.">
           <ul className="text-sm text-text-dim space-y-2 leading-relaxed">
             <li>· Your offers compete on price-per-million-tokens. Cheapest live offer wins each request.</li>
             <li>· If your upstream key returns an error, your offer is marked unhealthy for 60s and traffic skips it.</li>
@@ -61,4 +51,8 @@ function Section({ n, title, subtitle, children }: { n: number; title: string; s
       <div className="p-5">{children}</div>
     </section>
   );
+}
+
+function Skel() {
+  return <div className="h-24 rounded-md bg-bg-elevated/40 animate-pulse" />;
 }

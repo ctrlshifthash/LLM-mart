@@ -1,4 +1,6 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config();
 import { persistPricing } from '../src/lib/pricing';
 
 (async () => {
