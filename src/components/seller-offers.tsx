@@ -1,0 +1,217 @@
+'use client';
+import { useState, useMemo } from 'react';
+import useSWR from 'swr';
+import { toast } from 'sonner';
+import { Plus, Trash2, Pause, Play } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { fetcher } from '@/lib/fetcher';
+
+type Offer = {
+  id: string;
+  modelId: string;
+  modality: string;
+  priceInPerMUsdc: string;
+  priceOutPerMUsdc: string;
+  upstreamProvider: string;
+  maxDailyCapacityUsdc: string;
+  status: string;
+  createdAt: string;
+};
+
+type ModelOption = { id: string; name: string };
+
+export function SellerOffersPanel() {
+  const { data, mutate, isLoading } = useSWR<{ offers: Offer[] }>('/api/internal/offers', fetcher);
+  const { data: modelsData } = useSWR<{ models: ModelOption[] }>('/api/models', fetcher);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="space-y-4">
+      <CreateForm models={modelsData?.models || []} onCreated={() => mutate()} />
+
+      <div className="overflow-hidden rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead className="bg-bg-elevated/60 text-text-faint text-xs uppercase tracking-wide">
+            <tr>
+              <th className="text-left font-medium px-4 py-3">Model</th>
+              <th className="text-left font-medium px-4 py-3">Price In / Out</th>
+              <th className="text-left font-medium px-4 py-3">Daily Cap</th>
+              <th className="text-left font-medium px-4 py-3">Status</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {isLoading ? (
+              <tr><td colSpan={5} className="px-4 py-6 text-text-faint">Loading…</td></tr>
+            ) : !data?.offers?.length ? (
+              <tr><td colSpan={5} className="px-4 py-6 text-text-faint">No offers yet.</td></tr>
+            ) : (
+              data.offers.map((o) => (
+                <OfferRow key={o.id} o={o} onChanged={() => mutate()} />
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: () => void }) {
+  const [modelId, setModelId] = useState('');
+  const [filter, setFilter] = useState('');
+  const [priceIn, setPriceIn] = useState('0.10');
+  const [priceOut, setPriceOut] = useState('0.30');
+  const [cap, setCap] = useState('50');
+  const [upstreamKey, setUpstreamKey] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const filtered = useMemo(() => {
+    const f = filter.toLowerCase();
+    return f ? models.filter((m) => m.id.toLowerCase().includes(f)).slice(0, 100) : models.slice(0, 100);
+  }, [filter, models]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    if (!modelId) return toast.error('Select a model');
+    if (!upstreamKey) return toast.error('Upstream API key required');
+    setBusy(true);
+    try {
+      const res = await fetch('/api/internal/offers', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          modelId,
+          modality: 'text',
+          priceInPerMUsdc: priceIn,
+          priceOutPerMUsdc: priceOut,
+          maxDailyCapacityUsdc: cap,
+          upstreamProvider: 'openrouter',
+          upstreamKey,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message || 'failed');
+      toast.success('Offer created');
+      setModelId('');
+      setUpstreamKey('');
+      onCreated();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="rounded-lg border border-border bg-bg-elevated/40 p-5 grid sm:grid-cols-2 gap-4">
+      <div className="sm:col-span-2">
+        <Label>Model</Label>
+        <Input
+          mono
+          className="mt-1"
+          list="model-list"
+          placeholder="openai/gpt-4.1-mini"
+          value={modelId}
+          onChange={(e) => { setModelId(e.target.value); setFilter(e.target.value); }}
+        />
+        <datalist id="model-list">
+          {filtered.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </datalist>
+      </div>
+      <div>
+        <Label>Modality</Label>
+        <Select className="mt-1" defaultValue="text" disabled>
+          <option value="text">Text</option>
+        </Select>
+      </div>
+      <div>
+        <Label>Upstream Provider</Label>
+        <Select className="mt-1" defaultValue="openrouter">
+          <option value="openrouter">OpenRouter</option>
+        </Select>
+      </div>
+      <div>
+        <Label>Price In (USDC / M)</Label>
+        <Input mono className="mt-1" type="number" min={0} step="0.01" value={priceIn} onChange={(e) => setPriceIn(e.target.value)} />
+      </div>
+      <div>
+        <Label>Price Out (USDC / M)</Label>
+        <Input mono className="mt-1" type="number" min={0} step="0.01" value={priceOut} onChange={(e) => setPriceOut(e.target.value)} />
+      </div>
+      <div>
+        <Label>Max Daily Capacity (USDC)</Label>
+        <Input mono className="mt-1" type="number" min={0} step="1" value={cap} onChange={(e) => setCap(e.target.value)} />
+      </div>
+      <div>
+        <Label>Upstream API Key</Label>
+        <Input
+          mono
+          className="mt-1"
+          type="password"
+          placeholder="sk-or-v1-…"
+          value={upstreamKey}
+          onChange={(e) => setUpstreamKey(e.target.value)}
+        />
+      </div>
+      <div className="sm:col-span-2 flex justify-end">
+        <Button disabled={busy}>
+          <Plus className="h-4 w-4" /> {busy ? 'Creating…' : 'Create Offer'}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function OfferRow({ o, onChanged }: { o: Offer; onChanged: () => void }) {
+  async function patch(body: any) {
+    const res = await fetch(`/api/internal/offers/${o.id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    if (res.ok) { toast.success('Updated'); onChanged(); } else toast.error('Failed');
+  }
+  async function remove() {
+    if (!confirm('Delete this offer?')) return;
+    const res = await fetch(`/api/internal/offers/${o.id}`, { method: 'DELETE', credentials: 'include' });
+    if (res.ok) { toast.success('Deleted'); onChanged(); } else toast.error('Failed');
+  }
+  return (
+    <tr className="hover:bg-bg-card-hover/40">
+      <td className="px-4 py-3 font-mono text-xs">{o.modelId}</td>
+      <td className="px-4 py-3 font-mono text-xs">
+        <div>${Number(o.priceInPerMUsdc).toFixed(2)} <span className="text-text-faint">/ M in</span></div>
+        <div className="text-text-dim">${Number(o.priceOutPerMUsdc).toFixed(2)} <span className="text-text-faint">/ M out</span></div>
+      </td>
+      <td className="px-4 py-3 font-mono text-xs">${Number(o.maxDailyCapacityUsdc).toFixed(0)}</td>
+      <td className="px-4 py-3">
+        {o.status === 'active' ? <Badge variant="success">Active</Badge> : <Badge variant="warn">Paused</Badge>}
+      </td>
+      <td className="px-4 py-3 text-right">
+        <div className="inline-flex items-center gap-2">
+          {o.status === 'active' ? (
+            <button onClick={() => patch({ status: 'paused' })} className="text-text-faint hover:text-warn" title="Pause">
+              <Pause className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <button onClick={() => patch({ status: 'active' })} className="text-text-faint hover:text-success" title="Resume">
+              <Play className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <button onClick={remove} className="text-text-faint hover:text-danger" title="Delete">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
