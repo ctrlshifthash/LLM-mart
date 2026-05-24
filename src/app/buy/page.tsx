@@ -5,6 +5,7 @@ import { AccordionSection } from '@/components/accordion-section';
 
 const ApiKeysPanel = dynamic(() => import('@/components/api-keys-panel').then((m) => m.ApiKeysPanel), { ssr: false });
 const DepositPanel = dynamic(() => import('@/components/deposit-panel').then((m) => m.DepositPanel), { ssr: false });
+const RouterConfigPanel = dynamic(() => import('@/components/router-config-panel').then((m) => m.RouterConfigPanel), { ssr: false });
 
 export default function BuyPage() {
   return (
@@ -33,8 +34,13 @@ export default function BuyPage() {
           <DepositPanel />
         </AccordionSection>
 
-        <AccordionSection value="s3" number={3} title="Router Settings (optional)" subtitle="Priority and fallback providers — phase 9.">
-          <div className="text-sm text-text-dim">Coming online in phase 9.</div>
+        <AccordionSection
+          value="s3"
+          number={3}
+          title="Router Settings (optional)"
+          subtitle="Bring your own keys for priority + fallback. The marketplace handles everything in between."
+        >
+          <RouterConfigPanel />
         </AccordionSection>
 
         <AccordionSection value="s4" number={4} title="Quick Start" subtitle="Curl, OpenAI SDK, Anthropic SDK, Claude Code — phase 12.">
