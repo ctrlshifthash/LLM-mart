@@ -7,6 +7,7 @@ import { cn, shortAddr } from '@/lib/utils';
 import { Zap, LogOut } from 'lucide-react';
 
 const TABS = [
+  { href: '/dashboard', label: 'Dashboard' },
   { href: '/buy', label: 'Buy' },
   { href: '/sell', label: 'Sell' },
   { href: '/markets', label: 'Marketplace' },
