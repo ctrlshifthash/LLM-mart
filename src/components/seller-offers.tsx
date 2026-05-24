@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
 import { useAuthedSWR, useAuthedFetch } from '@/lib/authed-fetch';
@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { fetcher } from '@/lib/fetcher';
+import { ModelPicker, type ModelOption } from '@/components/model-picker';
 
 type Offer = {
   id: string;
@@ -24,15 +25,26 @@ type Offer = {
   createdAt: string;
 };
 
-type ModelOption = { id: string; name: string };
+type ApiModel = {
+  id: string;
+  name: string;
+  best: { promptPerM: number; completionPerM: number };
+  direct: { promptPerM: number; completionPerM: number };
+};
 
 export function SellerOffersPanel() {
   const { data, mutate, isLoading } = useAuthedSWR<{ offers: Offer[] }>('/api/internal/offers');
-  const { data: modelsData } = useSWR<{ models: ModelOption[] }>('/api/models', fetcher);
+  const { data: modelsData } = useSWR<{ models: ApiModel[] }>('/api/models', fetcher);
+  const modelOptions: ModelOption[] = (modelsData?.models || []).map((m) => ({
+    id: m.id,
+    name: m.name,
+    promptPerM: m.direct?.promptPerM,
+    completionPerM: m.direct?.completionPerM,
+  }));
 
   return (
     <div className="space-y-4">
-      <CreateForm models={modelsData?.models || []} onCreated={() => mutate()} />
+      <CreateForm models={modelOptions} onCreated={() => mutate()} />
 
       <div className="overflow-hidden rounded-lg border border-border">
         <table className="w-full text-sm">
@@ -65,17 +77,15 @@ export function SellerOffersPanel() {
 function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: () => void }) {
   const authedFetch = useAuthedFetch();
   const [modelId, setModelId] = useState('');
-  const [filter, setFilter] = useState('');
   const [priceIn, setPriceIn] = useState('0.10');
   const [priceOut, setPriceOut] = useState('0.30');
   const [cap, setCap] = useState('50');
   const [upstreamKey, setUpstreamKey] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const filtered = useMemo(() => {
-    const f = filter.toLowerCase();
-    return f ? models.filter((m) => m.id.toLowerCase().includes(f)).slice(0, 100) : models.slice(0, 100);
-  }, [filter, models]);
+  const selected = models.find((m) => m.id === modelId);
+  const directIn = selected?.promptPerM;
+  const directOut = selected?.completionPerM;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,17 +124,15 @@ function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: (
     <form onSubmit={submit} className="rounded-lg border border-border bg-bg-elevated/40 p-5 grid sm:grid-cols-2 gap-4">
       <div className="sm:col-span-2">
         <Label>Model</Label>
-        <Input
-          mono
-          className="mt-1"
-          list="model-list"
-          placeholder="openai/gpt-4.1-mini"
-          value={modelId}
-          onChange={(e) => { setModelId(e.target.value); setFilter(e.target.value); }}
-        />
-        <datalist id="model-list">
-          {filtered.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </datalist>
+        <div className="mt-1">
+          <ModelPicker models={models} value={modelId} onChange={setModelId} placeholder="Pick a model…" />
+        </div>
+        {selected && (directIn !== undefined || directOut !== undefined) && (
+          <p className="mt-2 text-[11px] text-text-faint">
+            Direct OpenRouter price: <span className="font-mono text-text-dim">${fmt(directIn || 0)}</span> in /{' '}
+            <span className="font-mono text-text-dim">${fmt(directOut || 0)}</span> out per M. Undercut these to win traffic.
+          </p>
+        )}
       </div>
       <div>
         <Label>Modality</Label>
@@ -214,4 +222,11 @@ function OfferRow({ o, onChanged }: { o: Offer; onChanged: () => void }) {
       </td>
     </tr>
   );
+}
+
+function fmt(n: number) {
+  if (n === 0) return '0';
+  if (n < 0.01) return n.toFixed(4);
+  if (n < 1) return n.toFixed(3);
+  return n.toFixed(2);
 }
