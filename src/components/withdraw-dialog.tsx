@@ -7,10 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuthedFetch } from '@/lib/authed-fetch';
 
 export function WithdrawDialog({ open, onOpenChange, max }: { open: boolean; onOpenChange: (b: boolean) => void; max: number }) {
   const { user } = usePrivy();
   const { wallets } = useWallets();
+  const authedFetch = useAuthedFetch();
   const wallet = wallets?.[0]?.address || (user as any)?.wallet?.address || '';
   const [amount, setAmount] = useState('');
   const [dest, setDest] = useState(wallet || '');
@@ -23,10 +25,9 @@ export function WithdrawDialog({ open, onOpenChange, max }: { open: boolean; onO
     if (amt > max) return toast.error('Amount exceeds available balance');
     setBusy(true);
     try {
-      const res = await fetch('/api/internal/withdraw', {
+      const res = await authedFetch('/api/internal/withdraw', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ amount: amt, destination: dest || wallet }),
       });
       const json = await res.json();

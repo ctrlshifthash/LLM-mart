@@ -1,14 +1,13 @@
 'use client';
 import { useState } from 'react';
-import useSWR from 'swr';
-import { fetcher } from '@/lib/fetcher';
+import { useAuthedSWR } from '@/lib/authed-fetch';
 import { formatUsdc } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ArrowUpFromLine } from 'lucide-react';
 import { WithdrawDialog } from '@/components/withdraw-dialog';
 
 export function SellerEarnings() {
-  const { data, mutate } = useSWR<{ balance: number; lifetimeEarned: number }>('/api/internal/earnings', fetcher, { refreshInterval: 5000 });
+  const { data, mutate } = useAuthedSWR<{ balance: number; lifetimeEarned: number }>('/api/internal/earnings', { refreshInterval: 5000 });
   const [open, setOpen] = useState(false);
   const balance = data?.balance ?? 0;
 

@@ -1,12 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
-import useSWR from 'swr';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { fetcher } from '@/lib/fetcher';
+import { useAuthedSWR, useAuthedFetch } from '@/lib/authed-fetch';
 
 const PROVIDERS = [
   { id: 'openrouter', label: 'OpenRouter' },
@@ -21,7 +20,16 @@ type Config = {
 };
 
 export function RouterConfigPanel() {
-  const { data, mutate } = useSWR<Config>('/api/internal/router-config', fetcher);
+  const { data, mutate } = useAuthedSWR<Config>('/api/internal/router-config');
+  const authedFetch = useAuthedFetch();
+
+  async function put(body: any) {
+    return authedFetch('/api/internal/router-config', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
 
   return (
     <div className="grid sm:grid-cols-2 gap-4">
@@ -31,21 +39,11 @@ export function RouterConfigPanel() {
         provider={data?.priorityProvider}
         hasKey={!!data?.hasPriorityKey}
         save={async (provider, key) => {
-          const res = await fetch('/api/internal/router-config', {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ priorityProvider: provider, priorityKey: key || undefined }),
-          });
+          const res = await put({ priorityProvider: provider, priorityKey: key || undefined });
           if (res.ok) { toast.success('Saved'); mutate(); } else toast.error('Failed');
         }}
         clear={async () => {
-          const res = await fetch('/api/internal/router-config', {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ priorityProvider: null, priorityKey: null }),
-          });
+          const res = await put({ priorityProvider: null, priorityKey: null });
           if (res.ok) { toast.success('Cleared'); mutate(); }
         }}
       />
@@ -55,21 +53,11 @@ export function RouterConfigPanel() {
         provider={data?.fallbackProvider}
         hasKey={!!data?.hasFallbackKey}
         save={async (provider, key) => {
-          const res = await fetch('/api/internal/router-config', {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ fallbackProvider: provider, fallbackKey: key || undefined }),
-          });
+          const res = await put({ fallbackProvider: provider, fallbackKey: key || undefined });
           if (res.ok) { toast.success('Saved'); mutate(); } else toast.error('Failed');
         }}
         clear={async () => {
-          const res = await fetch('/api/internal/router-config', {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ fallbackProvider: null, fallbackKey: null }),
-          });
+          const res = await put({ fallbackProvider: null, fallbackKey: null });
           if (res.ok) { toast.success('Cleared'); mutate(); }
         }}
       />

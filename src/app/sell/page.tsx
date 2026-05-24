@@ -1,6 +1,7 @@
 'use client';
 import { ClientOnly } from '@/components/client-only';
 import { NeedsPrivy } from '@/components/needs-privy';
+import { AuthGate } from '@/components/auth-gate';
 import { SellerOffersPanel } from '@/components/seller-offers';
 import { SellerEarnings } from '@/components/seller-earnings';
 
@@ -16,13 +17,11 @@ export default function SellPage() {
 
       <div className="flex flex-col gap-6">
         <Section n={1} title="Create offers" subtitle="Pick a model, set your USDC price per million tokens, paste an upstream API key.">
-          <ClientOnly fallback={<Skel />}><SellerOffersPanel /></ClientOnly>
+          <NeedsPrivy><ClientOnly fallback={<Skel />}><AuthGate><SellerOffersPanel /></AuthGate></ClientOnly></NeedsPrivy>
         </Section>
 
         <Section n={2} title="Earnings" subtitle="USDC credits accrue with every routed request. Withdraw any time.">
-          <NeedsPrivy>
-            <ClientOnly fallback={<Skel />}><SellerEarnings /></ClientOnly>
-          </NeedsPrivy>
+          <NeedsPrivy><ClientOnly fallback={<Skel />}><AuthGate><SellerEarnings /></AuthGate></ClientOnly></NeedsPrivy>
         </Section>
 
         <Section n={3} title="How routing works" subtitle="Buyers' requests land on the cheapest healthy offer for the model they call.">

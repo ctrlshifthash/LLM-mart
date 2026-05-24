@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
+import { useAuthedSWR, useAuthedFetch } from '@/lib/authed-fetch';
 import { Plus, Trash2, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,9 +27,8 @@ type Offer = {
 type ModelOption = { id: string; name: string };
 
 export function SellerOffersPanel() {
-  const { data, mutate, isLoading } = useSWR<{ offers: Offer[] }>('/api/internal/offers', fetcher);
+  const { data, mutate, isLoading } = useAuthedSWR<{ offers: Offer[] }>('/api/internal/offers');
   const { data: modelsData } = useSWR<{ models: ModelOption[] }>('/api/models', fetcher);
-  const [open, setOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -63,6 +63,7 @@ export function SellerOffersPanel() {
 }
 
 function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: () => void }) {
+  const authedFetch = useAuthedFetch();
   const [modelId, setModelId] = useState('');
   const [filter, setFilter] = useState('');
   const [priceIn, setPriceIn] = useState('0.10');
@@ -83,10 +84,9 @@ function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: (
     if (!upstreamKey) return toast.error('Upstream API key required');
     setBusy(true);
     try {
-      const res = await fetch('/api/internal/offers', {
+      const res = await authedFetch('/api/internal/offers', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           modelId,
           modality: 'text',
@@ -171,18 +171,18 @@ function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: (
 }
 
 function OfferRow({ o, onChanged }: { o: Offer; onChanged: () => void }) {
+  const authedFetch = useAuthedFetch();
   async function patch(body: any) {
-    const res = await fetch(`/api/internal/offers/${o.id}`, {
+    const res = await authedFetch(`/api/internal/offers/${o.id}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify(body),
     });
     if (res.ok) { toast.success('Updated'); onChanged(); } else toast.error('Failed');
   }
   async function remove() {
     if (!confirm('Delete this offer?')) return;
-    const res = await fetch(`/api/internal/offers/${o.id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await authedFetch(`/api/internal/offers/${o.id}`, { method: 'DELETE' });
     if (res.ok) { toast.success('Deleted'); onChanged(); } else toast.error('Failed');
   }
   return (

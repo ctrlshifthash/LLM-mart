@@ -1,6 +1,5 @@
 'use client';
-import useSWR from 'swr';
-import { fetcher } from '@/lib/fetcher';
+import { useAuthedSWR } from '@/lib/authed-fetch';
 import { formatUsdc } from '@/lib/utils';
 import { TrendingDown, DollarSign, Coins, BarChart3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +19,7 @@ type Resp = {
 };
 
 export function SavingsPanel() {
-  const { data } = useSWR<Resp>('/api/internal/savings', fetcher, { refreshInterval: 5000 });
+  const { data } = useAuthedSWR<Resp>('/api/internal/savings', { refreshInterval: 5000 });
   const t = data?.totals;
 
   return (

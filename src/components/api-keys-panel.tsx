@@ -1,5 +1,4 @@
 'use client';
-import useSWR from 'swr';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Copy, Plus, Trash2, KeyRound } from 'lucide-react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { fetcher } from '@/lib/fetcher';
+import { useAuthedSWR, useAuthedFetch } from '@/lib/authed-fetch';
 
 type ApiKey = {
   id: string;
@@ -18,7 +17,8 @@ type ApiKey = {
 };
 
 export function ApiKeysPanel() {
-  const { data, mutate, isLoading, error } = useSWR<{ keys: ApiKey[] }>('/api/internal/api-keys', fetcher);
+  const { data, mutate, isLoading, error } = useAuthedSWR<{ keys: ApiKey[] }>('/api/internal/api-keys');
+  const authedFetch = useAuthedFetch();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [created, setCreated] = useState<{ secret: string; name: string } | null>(null);
@@ -28,10 +28,9 @@ export function ApiKeysPanel() {
     if (creating) return;
     setCreating(true);
     try {
-      const res = await fetch('/api/internal/api-keys', {
+      const res = await authedFetch('/api/internal/api-keys', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ name: name || 'Untitled' }),
       });
       const json = await res.json();
@@ -49,7 +48,7 @@ export function ApiKeysPanel() {
 
   async function revoke(id: string) {
     if (!confirm('Revoke this key? Requests using it will start failing.')) return;
-    const res = await fetch(`/api/internal/api-keys/${id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await authedFetch(`/api/internal/api-keys/${id}`, { method: 'DELETE' });
     if (res.ok) {
       toast.success('Key revoked');
       mutate();

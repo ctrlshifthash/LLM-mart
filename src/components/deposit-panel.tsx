@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
-import useSWR from 'swr';
 import { toast } from 'sonner';
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallets, useSignAndSendTransaction } from '@privy-io/react-auth/solana';
+import { useAuthedSWR, useAuthedFetch } from '@/lib/authed-fetch';
 import {
   Connection,
   PublicKey,
@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { fetcher } from '@/lib/fetcher';
 import { Wallet, ArrowDownToLine } from 'lucide-react';
 import { formatUsdc } from '@/lib/utils';
 
@@ -31,7 +30,8 @@ const RPC = CLUSTER === 'mainnet-beta' ? 'https://api.mainnet-beta.solana.com' :
 const USDC_DECIMALS = 6;
 
 export function DepositPanel() {
-  const { data, mutate } = useSWR<{ balance: number }>('/api/internal/balance', fetcher, { refreshInterval: 4000 });
+  const { data, mutate } = useAuthedSWR<{ balance: number }>('/api/internal/balance', { refreshInterval: 4000 });
+  const authedFetch = useAuthedFetch();
   const { user } = usePrivy();
   const { wallets } = useWallets();
   const { signAndSendTransaction } = useSignAndSendTransaction();
@@ -81,10 +81,9 @@ export function DepositPanel() {
 
       toast.message('Submitted', { description: 'Waiting for confirmation…' });
 
-      const res = await fetch('/api/internal/deposit/confirm', {
+      const res = await authedFetch('/api/internal/deposit/confirm', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ txHash: sigB58 }),
       });
       const json = await res.json();

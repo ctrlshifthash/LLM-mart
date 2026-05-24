@@ -1,6 +1,7 @@
 'use client';
 import { ClientOnly } from '@/components/client-only';
 import { NeedsPrivy } from '@/components/needs-privy';
+import { AuthGate } from '@/components/auth-gate';
 import { SetupBanner } from '@/components/setup-banner';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { DepositPanel } from '@/components/deposit-panel';
@@ -22,17 +23,15 @@ export default function BuyPage() {
 
       <div className="flex flex-col gap-6">
         <Section n={1} title="Create and Manage API Keys" subtitle="Mint inf_ keys. Use them as bearer tokens against the OpenAI-compatible endpoint.">
-          <ClientOnly fallback={<Skel />}><ApiKeysPanel /></ClientOnly>
+          <NeedsPrivy><ClientOnly fallback={<Skel />}><AuthGate><ApiKeysPanel /></AuthGate></ClientOnly></NeedsPrivy>
         </Section>
 
         <Section n={2} title="Fund Your Account and Set Your Budget" subtitle="USDC on Solana. Balance is debited per request at the seller's quoted price.">
-          <NeedsPrivy>
-            <ClientOnly fallback={<Skel />}><DepositPanel /></ClientOnly>
-          </NeedsPrivy>
+          <NeedsPrivy><ClientOnly fallback={<Skel />}><AuthGate><DepositPanel /></AuthGate></ClientOnly></NeedsPrivy>
         </Section>
 
         <Section n={3} title="Router Settings (optional)" subtitle="Bring your own keys for priority + fallback. The marketplace handles everything in between.">
-          <ClientOnly fallback={<Skel />}><RouterConfigPanel /></ClientOnly>
+          <NeedsPrivy><ClientOnly fallback={<Skel />}><AuthGate><RouterConfigPanel /></AuthGate></ClientOnly></NeedsPrivy>
         </Section>
 
         <Section n={4} title="Quick Start" subtitle="Drop your key into curl, the OpenAI SDK, the Anthropic SDK, or Claude Code.">
@@ -40,7 +39,7 @@ export default function BuyPage() {
         </Section>
 
         <Section n={5} title="Your Savings and Purchases" subtitle="Every request, what you paid, and what you would've paid going direct.">
-          <ClientOnly fallback={<Skel />}><SavingsPanel /></ClientOnly>
+          <NeedsPrivy><ClientOnly fallback={<Skel />}><AuthGate><SavingsPanel /></AuthGate></ClientOnly></NeedsPrivy>
         </Section>
       </div>
     </div>
