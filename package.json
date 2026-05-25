@@ -12,7 +12,8 @@
     "db:studio": "drizzle-kit studio",
     "seed": "tsx scripts/seed.ts",
     "refresh-pricing": "tsx scripts/refresh-pricing.ts",
-    "gen-keypair": "tsx scripts/gen-keypair.ts"
+    "gen-keypair": "tsx scripts/gen-keypair.ts",
+    "init-treasury": "tsx scripts/init-treasury.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

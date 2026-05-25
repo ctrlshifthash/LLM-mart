@@ -150,7 +150,9 @@ export function DepositPanel() {
             <span className="font-mono normal-case">{CLUSTER === 'mainnet-beta' ? 'mainnet' : 'devnet'}</span>
           </div>
           <div className="mt-2 text-3xl font-semibold font-mono">
-            {walletUsdc === null && !walletErr ? '…' : formatUsdc(walletUsdc ?? 0)}
+            {walletErr ? <span className="text-text-faint">—</span> :
+             walletUsdc === null ? '…' :
+             formatUsdc(walletUsdc)}
           </div>
           <div className="mt-1 text-[11px] text-text-faint flex items-center gap-2">
             <Badge variant="outline">wallet</Badge>
