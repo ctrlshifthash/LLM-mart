@@ -16,7 +16,7 @@ export async function openrouterChat(opts: {
       'authorization': `Bearer ${apiKey}`,
       'content-type': 'application/json',
       'http-referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      'x-title': 'Surplus Intelligence',
+      'x-title': 'LLM Mart',
     },
     body: JSON.stringify(payload),
     signal,

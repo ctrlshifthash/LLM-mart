@@ -6,11 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useAuthedSWR, useAuthedFetch } from '@/lib/authed-fetch';
+import { PROVIDERS as PROVIDER_REGISTRY } from '@/lib/providers/registry';
 
-const PROVIDERS = [
-  { id: 'openrouter', label: 'OpenRouter' },
-  { id: 'openai', label: 'OpenAI' },
-];
+const PROVIDERS = PROVIDER_REGISTRY.map((p) => ({ id: p.slug, label: p.name }));
 
 type Config = {
   priorityProvider: string | null;

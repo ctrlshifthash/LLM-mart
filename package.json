@@ -1,5 +1,5 @@
 {
-  "name": "surplus-intelligence",
+  "name": "llmart",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,8 @@
     "seed": "tsx scripts/seed.ts",
     "refresh-pricing": "tsx scripts/refresh-pricing.ts",
     "gen-keypair": "tsx scripts/gen-keypair.ts",
-    "init-treasury": "tsx scripts/init-treasury.ts"
+    "init-treasury": "tsx scripts/init-treasury.ts",
+    "test:e2e": "tsx scripts/test-e2e.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

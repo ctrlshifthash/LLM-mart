@@ -1,7 +1,9 @@
+import { PROVIDERS } from '@/lib/providers/registry';
+
 export const runtime = 'edge';
 
 const ENC = new TextEncoder();
-const OPENROUTER = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
+const PROVIDER_BASE_URL: Record<string, string> = Object.fromEntries(PROVIDERS.map((p) => [p.slug, p.baseUrl]));
 
 export async function POST(req: Request) {
   const auth = req.headers.get('authorization') || '';
@@ -34,9 +36,12 @@ export async function POST(req: Request) {
     }),
   }).then((r) => r.json());
 
-  if (routes?.reason === 'insufficient_balance') {
+  if (routes?.reason === 'insufficient_credits') {
     return json({
-      error: { code: 'insufficient_balance', message: 'Add USDC to your account to continue.', balance: routes.balance },
+      error: {
+        code: 'insufficient_credits',
+        message: 'Buy credits with a seller of this model from /markets to continue.',
+      },
     }, 402);
   }
   const attempts: RouteAttempt[] = routes?.attempts || [];
@@ -83,28 +88,30 @@ async function callUpstream(a: RouteAttempt, body: any, signal: AbortSignal): Pr
   const payload = { ...body };
   if (payload.stream) payload.stream_options = { ...(payload.stream_options || {}), include_usage: true };
 
-  if (a.provider === 'openrouter') {
-    return fetch(`${OPENROUTER}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'authorization': `Bearer ${a.apiKey}`,
-        'content-type': 'application/json',
-        'http-referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-        'x-title': 'Surplus Intelligence',
-      },
-      body: JSON.stringify(payload),
-      signal,
-    });
+  const baseUrl = PROVIDER_BASE_URL[a.provider];
+  if (!baseUrl) {
+    return new Response(`unsupported provider ${a.provider}`, { status: 501 });
   }
-  if (a.provider === 'openai') {
-    return fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'authorization': `Bearer ${a.apiKey}`, 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal,
-    });
-  }
-  return new Response(`unsupported provider ${a.provider}`, { status: 501 });
+
+  // OpenRouter wants the referer + title headers; others just need the Bearer key.
+  const extraHeaders: Record<string, string> =
+    a.provider === 'openrouter'
+      ? {
+          'http-referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+          'x-title': 'LLM Mart',
+        }
+      : {};
+
+  return fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'authorization': `Bearer ${a.apiKey}`,
+      'content-type': 'application/json',
+      ...extraHeaders,
+    },
+    body: JSON.stringify(payload),
+    signal,
+  });
 }
 
 async function forward(

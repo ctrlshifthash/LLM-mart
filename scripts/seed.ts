@@ -29,7 +29,7 @@ async function main() {
   if (!platformId) {
     const ins = await db
       .insert(users)
-      .values({ id: PLATFORM_USER_ID, privyDid: PLATFORM_PRIVY_DID, email: 'platform@surplus.local' })
+      .values({ id: PLATFORM_USER_ID, privyDid: PLATFORM_PRIVY_DID, email: 'platform@llmart.local' })
       .returning({ id: users.id });
     platformId = ins[0].id;
     console.log('platform user created', platformId);

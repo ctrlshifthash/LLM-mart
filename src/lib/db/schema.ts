@@ -91,6 +91,33 @@ export const deposits = pgTable('deposits', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const credits = pgTable('credits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  buyerUserId: uuid('buyer_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  sellerUserId: uuid('seller_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  balanceUsdc: numeric('balance_usdc', { precision: 20, scale: 8 }).default('0').notNull(),
+  lifetimeUsdc: numeric('lifetime_usdc', { precision: 20, scale: 8 }).default('0').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  pair: uniqueIndex('credits_buyer_seller_uniq').on(t.buyerUserId, t.sellerUserId),
+  buyerIdx: index('credits_buyer_idx').on(t.buyerUserId),
+}));
+
+export const creditPurchases = pgTable('credit_purchases', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  buyerUserId: uuid('buyer_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  sellerUserId: uuid('seller_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  txHash: text('tx_hash').notNull().unique(),
+  amountUsdc: numeric('amount_usdc', { precision: 20, scale: 8 }).notNull(),
+  sellerReceivedUsdc: numeric('seller_received_usdc', { precision: 20, scale: 8 }).notNull(),
+  feeUsdc: numeric('fee_usdc', { precision: 20, scale: 8 }).notNull(),
+  confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  buyerIdx: index('credit_purchases_buyer_idx').on(t.buyerUserId, t.createdAt),
+}));
+
 export const modelPricing = pgTable('model_pricing', {
   modelId: text('model_id').primaryKey(),
   promptUsd: numeric('prompt_usd', { precision: 20, scale: 10 }).notNull(),

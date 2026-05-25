@@ -13,17 +13,14 @@ export function QuickstartCodeBlocks() {
   const base = `${origin}/api/inference/v1`;
 
   const snippets: Record<Tab, { lang: string; code: string }> = useMemo(() => ({
-    'Override Base URL': {
-      lang: 'text',
-      code: base,
-    },
+    'Override Base URL': { lang: 'text', code: base },
     'Terminal': {
       lang: 'bash',
       code:
-`export SURPLUS_API_KEY="inf_your_key_here"
+`export LLMART_API_KEY="inf_your_key_here"
 
 curl ${base}/chat/completions \\
-  -H "Authorization: Bearer $SURPLUS_API_KEY" \\
+  -H "Authorization: Bearer $LLMART_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "model": "anthropic/claude-3.5-sonnet",
@@ -52,7 +49,7 @@ for chunk in resp:
     'Anthropic SDK': {
       lang: 'bash',
       code:
-`# Point the Anthropic SDK at Surplus by overriding the base URL
+`# Point the Anthropic SDK at LLM Mart by overriding the base URL
 export ANTHROPIC_BASE_URL="${base}"
 export ANTHROPIC_API_KEY="inf_your_key_here"
 
@@ -61,7 +58,7 @@ export ANTHROPIC_API_KEY="inf_your_key_here"
     'Claude Code': {
       lang: 'bash',
       code:
-`# Run Claude Code through Surplus Intelligence
+`# Run Claude Code through LLM Mart
 export ANTHROPIC_BASE_URL="${base}"
 export ANTHROPIC_API_KEY="inf_your_key_here"
 

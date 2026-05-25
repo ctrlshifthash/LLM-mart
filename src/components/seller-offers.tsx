@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { fetcher } from '@/lib/fetcher';
 import { ModelPicker, type ModelOption } from '@/components/model-picker';
+import { PROVIDERS, getProviderName } from '@/lib/providers/registry';
 
 type Offer = {
   id: string;
@@ -51,6 +52,7 @@ export function SellerOffersPanel() {
           <thead className="bg-bg-elevated/60 text-text-faint text-xs uppercase tracking-wide">
             <tr>
               <th className="text-left font-medium px-4 py-3">Model</th>
+              <th className="text-left font-medium px-4 py-3">Provider</th>
               <th className="text-left font-medium px-4 py-3">Price In / Out</th>
               <th className="text-left font-medium px-4 py-3">Daily Cap</th>
               <th className="text-left font-medium px-4 py-3">Status</th>
@@ -59,9 +61,9 @@ export function SellerOffersPanel() {
           </thead>
           <tbody className="divide-y divide-border">
             {isLoading ? (
-              <tr><td colSpan={5} className="px-4 py-6 text-text-faint">Loading…</td></tr>
+              <tr><td colSpan={6} className="px-4 py-6 text-text-faint">Loading…</td></tr>
             ) : !data?.offers?.length ? (
-              <tr><td colSpan={5} className="px-4 py-6 text-text-faint">No offers yet.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-6 text-text-faint">No offers yet.</td></tr>
             ) : (
               data.offers.map((o) => (
                 <OfferRow key={o.id} o={o} onChanged={() => mutate()} />
@@ -81,6 +83,7 @@ function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: (
   const [priceOut, setPriceOut] = useState('0.30');
   const [cap, setCap] = useState('50');
   const [upstreamKey, setUpstreamKey] = useState('');
+  const [upstreamProvider, setUpstreamProvider] = useState<string>('openrouter');
   const [busy, setBusy] = useState(false);
 
   const selected = models.find((m) => m.id === modelId);
@@ -103,7 +106,7 @@ function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: (
           priceInPerMUsdc: priceIn,
           priceOutPerMUsdc: priceOut,
           maxDailyCapacityUsdc: cap,
-          upstreamProvider: 'openrouter',
+          upstreamProvider,
           upstreamKey,
         }),
       });
@@ -142,9 +145,18 @@ function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: (
       </div>
       <div>
         <Label>Upstream Provider</Label>
-        <Select className="mt-1" defaultValue="openrouter">
-          <option value="openrouter">OpenRouter</option>
+        <Select
+          className="mt-1"
+          value={upstreamProvider}
+          onChange={(e) => setUpstreamProvider(e.target.value)}
+        >
+          {PROVIDERS.map((p) => (
+            <option key={p.slug} value={p.slug}>{p.name}</option>
+          ))}
         </Select>
+        <p className="mt-1 text-[10px] text-text-faint">
+          Where your leftover credit lives. The buyer's calls hit this provider with your key.
+        </p>
       </div>
       <div>
         <Label>Price In (USDC / M)</Label>
@@ -196,6 +208,9 @@ function OfferRow({ o, onChanged }: { o: Offer; onChanged: () => void }) {
   return (
     <tr className="hover:bg-bg-card-hover/40">
       <td className="px-4 py-3 font-mono text-xs">{o.modelId}</td>
+      <td className="px-4 py-3 text-xs">
+        <Badge variant="outline" className="font-mono">{getProviderName(o.upstreamProvider)}</Badge>
+      </td>
       <td className="px-4 py-3 font-mono text-xs">
         <div>${Number(o.priceInPerMUsdc).toFixed(2)} <span className="text-text-faint">/ M in</span></div>
         <div className="text-text-dim">${Number(o.priceOutPerMUsdc).toFixed(2)} <span className="text-text-faint">/ M out</span></div>

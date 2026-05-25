@@ -1,8 +1,7 @@
 import { db } from '@/lib/db';
-import { offers, routerConfig, requests, ledger } from '@/lib/db/schema';
+import { offers, routerConfig, requests, credits } from '@/lib/db/schema';
 import { decrypt } from '@/lib/crypto';
-import { and, eq, gte, sql, desc, asc } from 'drizzle-orm';
-import { getBalance } from '@/lib/balance';
+import { and, eq, gte, sql, asc } from 'drizzle-orm';
 import { estimateCost } from '@/lib/meter';
 
 const unhealthy = new Map<string, number>();
@@ -23,6 +22,7 @@ export type RouteAttempt = {
   provider: string;
   apiKey: string;
   offerId: string | null;
+  sellerUserId: string | null;
   priceInPerM: number;
   priceOutPerM: number;
 };
@@ -32,7 +32,7 @@ export async function resolveRoutes(input: {
   modelId: string;
   estimatedTokensIn: number;
   estimatedMaxOut: number;
-}): Promise<{ attempts: RouteAttempt[]; balance: number; reason?: string }> {
+}): Promise<{ attempts: RouteAttempt[]; reason?: 'insufficient_credits' }> {
   const attempts: RouteAttempt[] = [];
 
   const [cfg] = await db.select().from(routerConfig).where(eq(routerConfig.userId, input.buyerUserId)).limit(1);
@@ -43,34 +43,52 @@ export async function resolveRoutes(input: {
       provider: cfg.priorityProvider,
       apiKey: await decrypt(cfg.priorityKeyEncrypted),
       offerId: null,
+      sellerUserId: null,
       priceInPerM: 0,
       priceOutPerM: 0,
     });
   }
 
   const cands = await db
-    .select()
+    .select({
+      id: offers.id,
+      sellerUserId: offers.sellerUserId,
+      priceIn: offers.priceInPerMUsdc,
+      priceOut: offers.priceOutPerMUsdc,
+      cap: offers.maxDailyCapacityUsdc,
+      provider: offers.upstreamProvider,
+      keyEnc: offers.upstreamKeyEncrypted,
+      creditBalance: credits.balanceUsdc,
+    })
     .from(offers)
+    .leftJoin(
+      credits,
+      and(eq(credits.sellerUserId, offers.sellerUserId), eq(credits.buyerUserId, input.buyerUserId)),
+    )
     .where(and(eq(offers.modelId, input.modelId), eq(offers.status, 'active')))
     .orderBy(asc(offers.priceInPerMUsdc))
     .limit(5);
 
-  const balance = await getBalance(input.buyerUserId);
+  let sawCandidate = false;
   for (const o of cands) {
+    sawCandidate = true;
     if (!isHealthy(o.id)) continue;
     const spent = await dailySpend(o.id);
-    if (spent >= Number(o.maxDailyCapacityUsdc)) continue;
-    const est = estimateCost(input.estimatedTokensIn, input.estimatedMaxOut, Number(o.priceInPerMUsdc), Number(o.priceOutPerMUsdc));
-    if (balance < est) {
-      return { attempts, balance, reason: 'insufficient_balance' };
-    }
+    if (spent >= Number(o.cap)) continue;
+    const balance = Number(o.creditBalance || 0);
+    if (balance <= 0) continue;
+    const est = estimateCost(input.estimatedTokensIn, input.estimatedMaxOut, Number(o.priceIn), Number(o.priceOut));
+    // Require at least a tiny buffer; if we have any balance but not enough for the worst case,
+    // we still try — the meter will debit actuals and fail open if we go negative.
+    if (balance < est && balance < 0.0001) continue;
     attempts.push({
       source: 'marketplace',
-      provider: o.upstreamProvider,
-      apiKey: await decrypt(o.upstreamKeyEncrypted),
+      provider: o.provider,
+      apiKey: await decrypt(o.keyEnc),
       offerId: o.id,
-      priceInPerM: Number(o.priceInPerMUsdc),
-      priceOutPerM: Number(o.priceOutPerMUsdc),
+      sellerUserId: o.sellerUserId,
+      priceInPerM: Number(o.priceIn),
+      priceOutPerM: Number(o.priceOut),
     });
   }
 
@@ -80,12 +98,16 @@ export async function resolveRoutes(input: {
       provider: cfg.fallbackProvider,
       apiKey: await decrypt(cfg.fallbackKeyEncrypted),
       offerId: null,
+      sellerUserId: null,
       priceInPerM: 0,
       priceOutPerM: 0,
     });
   }
 
-  return { attempts, balance };
+  if (attempts.length === 0 && sawCandidate) {
+    return { attempts, reason: 'insufficient_credits' };
+  }
+  return { attempts };
 }
 
 export async function dailySpend(offerId: string): Promise<number> {

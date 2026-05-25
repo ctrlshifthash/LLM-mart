@@ -59,18 +59,18 @@ export function DashboardView() {
   return (
     <div className="space-y-8">
       {/* Account header */}
-      <div className="rounded-xl border border-border bg-bg-card/40 backdrop-blur-sm card-glow p-5 flex items-center gap-6">
+      <div className="rounded-2xl glass card-glow p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 reveal">
         <div className="flex-1">
-          <div className="text-xs text-text-faint uppercase tracking-wide">Wallet</div>
+          <div className="text-[10px] text-text-faint uppercase tracking-[0.15em]">Wallet</div>
           <div className="mt-1 font-mono text-sm">{shortAddr(account.wallet, 6) || '—'}</div>
         </div>
         <div className="flex-1">
-          <div className="text-xs text-text-faint uppercase tracking-wide">Email</div>
+          <div className="text-[10px] text-text-faint uppercase tracking-[0.15em]">Email</div>
           <div className="mt-1 text-sm">{account.email || '—'}</div>
         </div>
-        <div className="flex-1 text-right">
-          <div className="text-xs text-text-faint uppercase tracking-wide">USDC Balance</div>
-          <div className="mt-1 font-mono text-2xl font-semibold">{formatUsdc(account.balance)}</div>
+        <div className="flex-1 sm:text-right">
+          <div className="text-[10px] text-text-faint uppercase tracking-[0.15em]">Legacy USDC Credit</div>
+          <div className="mt-1 font-mono text-2xl font-semibold gradient-text-cool">{formatUsdc(account.balance)}</div>
         </div>
       </div>
 
@@ -109,7 +109,7 @@ export function DashboardView() {
       {/* Two columns */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent requests */}
-        <div className="rounded-xl border border-border bg-bg-card/40 backdrop-blur-sm card-glow overflow-hidden">
+        <div className="rounded-2xl glass card-glow overflow-hidden reveal reveal-delay-2">
           <header className="flex items-center justify-between p-5 border-b border-border">
             <div className="flex items-center gap-2">
               <Send className="h-4 w-4 text-accent" />
@@ -146,7 +146,7 @@ export function DashboardView() {
         </div>
 
         {/* Recent ledger */}
-        <div className="rounded-xl border border-border bg-bg-card/40 backdrop-blur-sm card-glow overflow-hidden">
+        <div className="rounded-2xl glass card-glow overflow-hidden reveal reveal-delay-2">
           <header className="flex items-center justify-between p-5 border-b border-border">
             <div className="flex items-center gap-2">
               <Inbox className="h-4 w-4 text-accent" />
@@ -234,9 +234,9 @@ function Stat({
   icon, label, value, sub, accent, href,
 }: { icon: React.ReactNode; label: string; value: string; sub?: string; accent?: 'success'; href?: string }) {
   const inner = (
-    <div className={`rounded-lg border border-border bg-bg-elevated/40 p-5 ${href ? 'hover:bg-bg-card-hover/40 hover:border-border-strong transition-colors' : ''}`}>
-      <div className="flex items-center gap-2 text-xs text-text-faint uppercase tracking-wide">{icon} {label}</div>
-      <div className={`mt-2 text-2xl font-semibold font-mono ${accent === 'success' ? 'text-success' : ''}`}>{value}</div>
+    <div className={`rounded-2xl glass ${href ? 'glass-hover' : ''} p-5 lift`}>
+      <div className="flex items-center gap-2 text-[10px] text-text-faint uppercase tracking-[0.15em]">{icon} {label}</div>
+      <div className={`mt-2 text-2xl font-semibold font-mono ${accent === 'success' ? 'text-success' : 'text-text'}`}>{value}</div>
       {sub && <div className="mt-1 text-xs text-text-faint">{sub}</div>}
     </div>
   );

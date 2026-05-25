@@ -112,6 +112,64 @@ export async function sendUsdc(to: PublicKey, amountUi: number): Promise<string>
   return await sendAndConfirmTransaction(conn, tx, [payer]);
 }
 
+export async function verifyCreditPurchase(opts: {
+  txHash: string;
+  buyerWallet: string;
+  sellerWallet: string;
+  treasuryWallet: string;
+  expectedSellerBase: bigint;
+  expectedFeeBase: bigint;
+}): Promise<{ slot: number }> {
+  const conn = getConnection();
+  let tx = null as Awaited<ReturnType<typeof conn.getParsedTransaction>>;
+  for (let i = 0; i < 8; i++) {
+    tx = await conn.getParsedTransaction(opts.txHash, {
+      maxSupportedTransactionVersion: 0,
+      commitment: 'confirmed',
+    });
+    if (tx) break;
+    await new Promise((r) => setTimeout(r, 1200));
+  }
+  if (!tx) throw new Error('tx_not_found');
+  if (tx.meta?.err) throw new Error(`tx_failed: ${JSON.stringify(tx.meta.err)}`);
+
+  const pre = tx.meta?.preTokenBalances || [];
+  const post = tx.meta?.postTokenBalances || [];
+  const mint = USDC_MINT.toBase58();
+  const deltas = new Map<string, bigint>();
+
+  for (const b of post) {
+    if (b.mint !== mint) continue;
+    const owner = b.owner || '';
+    const preMatch = pre.find((p) => p.accountIndex === b.accountIndex);
+    const before = preMatch ? BigInt(preMatch.uiTokenAmount.amount) : BigInt(0);
+    const after = BigInt(b.uiTokenAmount.amount);
+    deltas.set(owner, (deltas.get(owner) || BigInt(0)) + (after - before));
+  }
+  for (const b of pre) {
+    if (b.mint !== mint) continue;
+    const owner = b.owner || '';
+    const postMatch = post.find((p) => p.accountIndex === b.accountIndex);
+    if (postMatch) continue;
+    deltas.set(owner, (deltas.get(owner) || BigInt(0)) - BigInt(b.uiTokenAmount.amount));
+  }
+
+  const buyerDelta = deltas.get(opts.buyerWallet) ?? BigInt(0);
+  if (-buyerDelta < opts.expectedSellerBase + opts.expectedFeeBase) {
+    throw new Error(`buyer_underpaid (${-buyerDelta} < ${opts.expectedSellerBase + opts.expectedFeeBase})`);
+  }
+  const sellerDelta = deltas.get(opts.sellerWallet) ?? BigInt(0);
+  if (sellerDelta < opts.expectedSellerBase) {
+    throw new Error(`seller_underreceived (${sellerDelta} < ${opts.expectedSellerBase})`);
+  }
+  const treasuryDelta = deltas.get(opts.treasuryWallet) ?? BigInt(0);
+  if (treasuryDelta < opts.expectedFeeBase) {
+    throw new Error(`treasury_underreceived (${treasuryDelta} < ${opts.expectedFeeBase})`);
+  }
+
+  return { slot: tx.slot };
+}
+
 export async function getTreasuryUsdcBalance(): Promise<number> {
   try {
     const conn = getConnection();

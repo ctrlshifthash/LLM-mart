@@ -1,6 +1,6 @@
-# Surplus Intelligence — Inference Resale Marketplace
+# LLM Mart — Inference Resale Marketplace
 
-A marketplace where buyers mint API keys, fund a USDC-on-Solana balance, and call an OpenAI-compatible endpoint that routes each request to whichever seller offers the cheapest live capacity for the requested model. Sellers list surplus inference from their own provider accounts (OpenRouter, etc.) at a markup over cost but well below sticker. Platform takes 10% per settled request.
+A marketplace where buyers mint API keys, buy USDC credits from sellers (paid direct to the seller's Solana wallet, 10% to treasury, in one signed tx), and call an OpenAI-compatible endpoint that routes each request to whichever seller offers the cheapest live capacity for the requested model. Sellers resell their leftover credit from OpenRouter, Venice AI, or Uncensored AI at a markup over cost but well below sticker.
 
 ## Stack
 
