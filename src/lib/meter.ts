@@ -1,11 +1,13 @@
 import { db } from '@/lib/db';
-import { requests, ledger, offers } from '@/lib/db/schema';
+import { requests, ledger, offers, users } from '@/lib/db/schema';
 import { getPricingForModel } from '@/lib/pricing';
 import { invalidateBalance } from '@/lib/balance';
-import { eq, sql } from 'drizzle-orm';
+import { sendUsdc, PublicKey } from '@/lib/chain';
+import { eq } from 'drizzle-orm';
 
 const PLATFORM_USER_ID = process.env.PLATFORM_USER_ID || '00000000-0000-0000-0000-000000000001';
-const PLATFORM_FEE_RATE = 0.10;
+const PLATFORM_FEE_RATE = Number(process.env.PLATFORM_FEE_RATE || 0.10);
+const DUST_THRESHOLD_USDC = Number(process.env.DUST_THRESHOLD_USDC || 0.001);
 
 export type MeterInput = {
   buyerUserId: string;
@@ -20,7 +22,12 @@ export type MeterInput = {
   error?: string;
 };
 
-export async function meter(input: MeterInput): Promise<{ buyerCharge: number; sellerPayout: number; platformFee: number; directApiCost: number }> {
+export async function meter(input: MeterInput): Promise<{
+  buyerCharge: number;
+  sellerPayout: number;
+  platformFee: number;
+  directApiCost: number;
+}> {
   const tokensIn = Math.max(0, input.tokensIn | 0);
   const tokensOut = Math.max(0, input.tokensOut | 0);
 
@@ -57,6 +64,8 @@ export async function meter(input: MeterInput): Promise<{ buyerCharge: number; s
   const platformFee = buyerCharge * PLATFORM_FEE_RATE;
   const sellerPayout = buyerCharge - platformFee;
 
+  let requestId: string | null = null;
+
   await db.transaction(async (tx) => {
     const [reqRow] = await tx
       .insert(requests)
@@ -77,6 +86,7 @@ export async function meter(input: MeterInput): Promise<{ buyerCharge: number; s
         error: input.error,
       })
       .returning({ id: requests.id });
+    requestId = reqRow.id;
 
     if (buyerCharge > 0) {
       await tx.insert(ledger).values({
@@ -109,7 +119,62 @@ export async function meter(input: MeterInput): Promise<{ buyerCharge: number; s
   if (sellerUserId) invalidateBalance(sellerUserId);
   invalidateBalance(PLATFORM_USER_ID);
 
+  // Fire-and-forget: send seller's payout directly to their Solana wallet now.
+  // Treasury keeps the 10% platform fee. If the on-chain send fails, the credit
+  // stays in the seller's ledger and they can Withdraw manually later.
+  if (
+    sellerUserId &&
+    sellerUserId !== PLATFORM_USER_ID &&
+    sellerPayout >= DUST_THRESHOLD_USDC &&
+    requestId
+  ) {
+    void autoSettleToSellerWallet({
+      sellerUserId,
+      amount: sellerPayout,
+      modelId: input.modelId,
+      requestId,
+    });
+  }
+
   return { buyerCharge, sellerPayout, platformFee, directApiCost };
+}
+
+async function autoSettleToSellerWallet(opts: {
+  sellerUserId: string;
+  amount: number;
+  modelId: string;
+  requestId: string;
+}) {
+  try {
+    const [u] = await db
+      .select({ wallet: users.walletAddress })
+      .from(users)
+      .where(eq(users.id, opts.sellerUserId))
+      .limit(1);
+    if (!u?.wallet) {
+      console.warn('[auto-settle] seller has no wallet, leaving credit', opts.sellerUserId);
+      return;
+    }
+    let dest: PublicKey;
+    try {
+      dest = new PublicKey(u.wallet);
+    } catch {
+      console.warn('[auto-settle] invalid seller wallet, leaving credit', u.wallet);
+      return;
+    }
+    const sig = await sendUsdc(dest, opts.amount);
+    await db.insert(ledger).values({
+      userId: opts.sellerUserId,
+      kind: 'payout',
+      amountUsdc: (-opts.amount).toFixed(8),
+      requestId: opts.requestId,
+      txHash: sig,
+      note: `auto-payout for ${opts.modelId}`,
+    });
+    invalidateBalance(opts.sellerUserId);
+  } catch (e: any) {
+    console.error('[auto-settle] failed:', e?.message || e);
+  }
 }
 
 export function estimateCost(tokensIn: number, maxOut: number, priceInPerM: number, priceOutPerM: number): number {
