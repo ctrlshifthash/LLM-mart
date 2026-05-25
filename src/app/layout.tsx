@@ -5,6 +5,8 @@ import { Suspense } from 'react';
 import { Providers } from '@/components/providers';
 import { Nav } from '@/components/nav';
 import { Footer } from '@/components/footer';
+import { ClientOnly } from '@/components/client-only';
+import { WelcomeDepositModal } from '@/components/welcome-deposit-modal';
 import { Toaster } from 'sonner';
 
 const inter = Inter({ variable: '--font-sans-inter', subsets: ['latin'] });
@@ -26,6 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </Suspense>
           <main className="flex-1">{children}</main>
           <Footer />
+          <ClientOnly><WelcomeDepositModal /></ClientOnly>
           <Toaster theme="dark" position="bottom-right" toastOptions={{ style: { background: '#0f1525', border: '1px solid #243056', color: '#e5e7eb' } }} />
         </Providers>
       </body>
