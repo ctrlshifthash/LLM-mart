@@ -20,18 +20,17 @@
     <img alt="Tailwind v4" src="https://img.shields.io/badge/Tailwind-v4-06b6d4?logo=tailwindcss&logoColor=white" />
     <img alt="Drizzle ORM" src="https://img.shields.io/badge/Drizzle-ORM-c5f74f?logo=drizzle&logoColor=black" />
     <img alt="Postgres" src="https://img.shields.io/badge/Neon-Postgres-00e699?logo=postgresql&logoColor=white" />
-    <img alt="Solana" src="https://img.shields.io/badge/Solana-mainnet--beta-9945ff?logo=solana&logoColor=white" />
     <img alt="USDC" src="https://img.shields.io/badge/USDC-settlement-2775ca?logo=usdcoin&logoColor=white" />
     <img alt="Privy" src="https://img.shields.io/badge/Privy-auth-5b21b6" />
     <img alt="OpenAI-compatible" src="https://img.shields.io/badge/OpenAI-compatible-10a37f?logo=openai&logoColor=white" />
   </p>
 
   <p>
-    <img alt="Stars" src="https://img.shields.io/github/stars/ctrlshifthash/LLM-mart?style=flat&color=22d3ee" />
-    <img alt="Forks" src="https://img.shields.io/github/forks/ctrlshifthash/LLM-mart?style=flat&color=818cf8" />
-    <img alt="Last commit" src="https://img.shields.io/github/last-commit/ctrlshifthash/LLM-mart?style=flat&color=f472b6" />
-    <img alt="Issues" src="https://img.shields.io/github/issues/ctrlshifthash/LLM-mart?style=flat" />
-    <img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-success" />
+    <b>Powered by</b>
+    &nbsp;
+    <a href="https://openrouter.ai"><img alt="OpenRouter" src="https://img.shields.io/badge/OpenRouter-22d3ee?style=flat&labelColor=0a0e1a&color=22d3ee&logoColor=white" /></a>
+    <a href="https://venice.ai"><img alt="Venice AI" src="https://img.shields.io/badge/Venice%20AI-4ade80?style=flat&labelColor=0a0e1a&color=4ade80&logoColor=white" /></a>
+    <a href="https://uncensored.chat"><img alt="Uncensored AI" src="https://img.shields.io/badge/Uncensored%20AI-fbbf24?style=flat&labelColor=0a0e1a&color=fbbf24&logoColor=white" /></a>
   </p>
 
 </div>
