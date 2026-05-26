@@ -134,9 +134,12 @@ function SocialButtons() {
       href: process.env.NEXT_PUBLIC_PUMPFUN_URL || 'https://pump.fun',
       tint: 'hover:border-success/60 hover:text-success hover:shadow-[0_8px_24px_-8px_rgba(74,222,128,0.5)]',
       icon: (
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
-          <path d="M12 2.5a3.5 3.5 0 0 1 3.5 3.5v3.5h-7V6A3.5 3.5 0 0 1 12 2.5Zm5.5 7v4.5a5.5 5.5 0 0 1-11 0V9.5h11ZM12 16a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" />
-        </svg>
+        <img
+          src="https://static.wixstatic.com/media/e2da02_248e6293fa024f6e9dd4130271bb14c3~mv2.png"
+          alt=""
+          className="h-4 w-4 object-contain"
+          aria-hidden
+        />
       ),
     },
     {
