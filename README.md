@@ -2,11 +2,12 @@
 
   <h1>LLM Mart</h1>
 
-  <p>
-    <b>The marketplace for AI inference.</b><br/>
-    Buy GPT-4, Claude, Llama, Gemini and 350+ other models for <b>70–90% less</b>.<br/>
-    Sellers list their leftover OpenRouter / Venice AI / Uncensored AI credit. Buyers pay them in USDC on Solana. Drop-in OpenAI-compatible API.
-  </p>
+  <p><b>The marketplace for AI inference.</b></p>
+
+  <p>GPT-4, Claude, Llama, Gemini and 350+ other models — <b>70 to 90% off</b> sticker price.</p>
+
+  <p>Sellers resell their leftover OpenRouter / Venice AI / Uncensored AI credit.<br/>
+  Buyers pay them in USDC on Solana, then call any model through one OpenAI-compatible API.</p>
 
   <p>
     <a href="https://tryllmmart.com"><img alt="Website" src="https://img.shields.io/badge/website-tryllmmart.com-22d3ee?style=for-the-badge&logo=vercel&logoColor=white" /></a>
@@ -25,13 +26,7 @@
     <img alt="OpenAI-compatible" src="https://img.shields.io/badge/OpenAI-compatible-10a37f?logo=openai&logoColor=white" />
   </p>
 
-  <p>
-    <b>Powered by</b>
-    &nbsp;
-    <a href="https://openrouter.ai"><img alt="OpenRouter" src="https://img.shields.io/badge/OpenRouter-22d3ee?style=flat&labelColor=0a0e1a&color=22d3ee&logoColor=white" /></a>
-    <a href="https://venice.ai"><img alt="Venice AI" src="https://img.shields.io/badge/Venice%20AI-4ade80?style=flat&labelColor=0a0e1a&color=4ade80&logoColor=white" /></a>
-    <a href="https://uncensored.chat"><img alt="Uncensored AI" src="https://img.shields.io/badge/Uncensored%20AI-fbbf24?style=flat&labelColor=0a0e1a&color=fbbf24&logoColor=white" /></a>
-  </p>
+  <p><img alt="Powered by" src="https://img.shields.io/badge/Powered%20by-1f2937?style=flat" /> <a href="https://openrouter.ai"><img alt="OpenRouter" src="https://img.shields.io/badge/OpenRouter-22d3ee?style=flat&labelColor=0a0e1a&color=22d3ee&logoColor=white" /></a> <a href="https://venice.ai"><img alt="Venice AI" src="https://img.shields.io/badge/Venice%20AI-4ade80?style=flat&labelColor=0a0e1a&color=4ade80&logoColor=white" /></a> <a href="https://uncensored.chat"><img alt="Uncensored AI" src="https://img.shields.io/badge/Uncensored%20AI-fbbf24?style=flat&labelColor=0a0e1a&color=fbbf24&logoColor=white" /></a></p>
 
 </div>
 
