@@ -51,10 +51,14 @@ export async function POST(req: Request) {
 
   const started = Date.now();
   let lastErr: any = null;
+  let lastStatus = 0;
+  let lastProvider = '';
   for (const attempt of attempts) {
     try {
       const upstream = await callUpstream(attempt, body, req.signal);
       if (!upstream.ok) {
+        lastStatus = upstream.status;
+        lastProvider = attempt.provider;
         lastErr = await upstream.text().catch(() => '');
         if (attempt.offerId) markUnhealthy(req.url, attempt.offerId);
         continue;
@@ -69,10 +73,23 @@ export async function POST(req: Request) {
       });
     } catch (e: any) {
       lastErr = e?.message || String(e);
+      lastProvider = attempt.provider;
       if (attempt.offerId) markUnhealthy(req.url, attempt.offerId);
     }
   }
-  return json({ error: { code: 'all_failed', message: `All routes failed: ${lastErr || 'unknown'}` } }, 503);
+  // Surface the actual upstream error so the buyer can see which provider rejected and why.
+  let parsedUpstream: any = null;
+  try { parsedUpstream = JSON.parse(lastErr || ''); } catch { /* ignore */ }
+  const upstreamMessage = parsedUpstream?.error?.message || (typeof lastErr === 'string' ? lastErr.slice(0, 400) : '');
+  return json({
+    error: {
+      code: 'all_routes_failed',
+      message: lastProvider
+        ? `All ${attempts.length} route(s) failed. Last upstream: ${lastProvider}${lastStatus ? ` ${lastStatus}` : ''} — ${upstreamMessage || 'unknown'}`
+        : `All routes failed: ${upstreamMessage || 'unknown'}`,
+      upstream: { provider: lastProvider || null, status: lastStatus || null, message: upstreamMessage || null },
+    },
+  }, 503);
 }
 
 type RouteAttempt = {

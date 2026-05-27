@@ -3,7 +3,8 @@ import { offers } from '@/lib/db/schema';
 import { getAuthedUser } from '@/lib/privy';
 import { ok, err, fromError } from '@/lib/api';
 import { encrypt } from '@/lib/crypto';
-import { and, eq, desc } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
+import { testProviderKey } from '@/lib/providers/test-key';
 
 export const runtime = 'nodejs';
 
@@ -44,6 +45,17 @@ export async function POST(req: Request) {
     if (!isFinite(priceOut) || priceOut < 0) return err(400, 'bad_request', 'priceOutPerMUsdc invalid');
     if (!isFinite(cap) || cap < 0) return err(400, 'bad_request', 'maxDailyCapacityUsdc invalid');
 
+    // Save-time validation: ping the chosen provider with the key.
+    // Rejects empty keys, whitespace-mangled keys, and revoked / wrong-provider keys
+    // before they can ever land on a buyer's request.
+    const provider = b.upstreamProvider || 'openrouter';
+    const probe = await testProviderKey(provider, b.upstreamKey);
+    if (!probe.ok) {
+      return err(400, 'upstream_key_invalid',
+        `Upstream rejected the key (${provider}, ${probe.status || 'no response'}): ${probe.message}`,
+      );
+    }
+
     const upstreamKeyEncrypted = await encrypt(b.upstreamKey);
     const [row] = await db
       .insert(offers)
@@ -53,13 +65,13 @@ export async function POST(req: Request) {
         modality: b.modality || 'text',
         priceInPerMUsdc: priceIn.toString(),
         priceOutPerMUsdc: priceOut.toString(),
-        upstreamProvider: b.upstreamProvider || 'openrouter',
+        upstreamProvider: provider,
         upstreamKeyEncrypted,
         maxDailyCapacityUsdc: cap.toString(),
         status: 'active',
       })
       .returning({ id: offers.id });
-    return ok({ id: row.id });
+    return ok({ id: row.id, probe: { modelsCount: probe.modelsCount, sample: probe.sample } });
   } catch (e) {
     return fromError(e);
   }

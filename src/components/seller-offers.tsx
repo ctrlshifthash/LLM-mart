@@ -3,7 +3,7 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
 import { useAuthedSWR, useAuthedFetch } from '@/lib/authed-fetch';
-import { Plus, Trash2, Pause, Play } from 'lucide-react';
+import { Plus, Trash2, Pause, Play, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -192,6 +192,9 @@ function CreateForm({ models, onCreated }: { models: ModelOption[]; onCreated: (
 
 function OfferRow({ o, onChanged }: { o: Offer; onChanged: () => void }) {
   const authedFetch = useAuthedFetch();
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<null | { ok: boolean; message?: string; sample?: string[] }>(null);
+
   async function patch(body: any) {
     const res = await authedFetch(`/api/internal/offers/${o.id}`, {
       method: 'PATCH',
@@ -205,6 +208,27 @@ function OfferRow({ o, onChanged }: { o: Offer; onChanged: () => void }) {
     const res = await authedFetch(`/api/internal/offers/${o.id}`, { method: 'DELETE' });
     if (res.ok) { toast.success('Deleted'); onChanged(); } else toast.error('Failed');
   }
+  async function testKey() {
+    if (testing) return;
+    setTesting(true);
+    try {
+      const res = await authedFetch(`/api/internal/offers/${o.id}/test`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        const msg = json?.message || json?.error?.message || `HTTP ${res.status}`;
+        setTestResult({ ok: false, message: msg });
+        toast.error(`Upstream rejected key: ${msg}`);
+      } else {
+        setTestResult({ ok: true, sample: json.sample });
+        toast.success(`Key works — ${json.modelsCount} models reachable`);
+      }
+    } catch (e: any) {
+      setTestResult({ ok: false, message: e?.message || 'test failed' });
+      toast.error(e?.message || 'test failed');
+    } finally {
+      setTesting(false);
+    }
+  }
   return (
     <tr className="hover:bg-bg-card-hover/40">
       <td className="px-4 py-3 font-mono text-xs">{o.modelId}</td>
@@ -217,10 +241,23 @@ function OfferRow({ o, onChanged }: { o: Offer; onChanged: () => void }) {
       </td>
       <td className="px-4 py-3 font-mono text-xs">${Number(o.maxDailyCapacityUsdc).toFixed(0)}</td>
       <td className="px-4 py-3">
-        {o.status === 'active' ? <Badge variant="success">Active</Badge> : <Badge variant="warn">Paused</Badge>}
+        <div className="flex items-center gap-2">
+          {o.status === 'active' ? <Badge variant="success">Active</Badge> : <Badge variant="warn">Paused</Badge>}
+          {testResult && (
+            testResult.ok
+              ? <span title="Key verified" className="inline-flex items-center text-success"><CheckCircle2 className="h-3.5 w-3.5" /></span>
+              : <span title={testResult.message || 'Key failed'} className="inline-flex items-center text-danger"><AlertCircle className="h-3.5 w-3.5" /></span>
+          )}
+        </div>
+        {testResult && !testResult.ok && (
+          <div className="mt-1 text-[10px] text-danger max-w-[200px] truncate" title={testResult.message}>{testResult.message}</div>
+        )}
       </td>
       <td className="px-4 py-3 text-right">
         <div className="inline-flex items-center gap-2">
+          <button onClick={testKey} disabled={testing} className="text-text-faint hover:text-accent disabled:opacity-50" title="Test upstream key">
+            {testing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+          </button>
           {o.status === 'active' ? (
             <button onClick={() => patch({ status: 'paused' })} className="text-text-faint hover:text-warn" title="Pause">
               <Pause className="h-3.5 w-3.5" />
