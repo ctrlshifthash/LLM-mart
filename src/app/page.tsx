@@ -61,7 +61,7 @@ export default function Home() {
             n={2}
             icon={<Coins className="h-4 w-4" />}
             title="Buy credits"
-            text="Click Buy on a seller. One Phantom signature pays them in USDC (90%) + treasury (10%) in one tx."
+            text="Click Buy on a seller. One Phantom signature pays them in USDC (99%) + treasury (1%) in one tx."
             cta={{ label: 'See sellers', href: '/markets' }}
           />
           <Step
@@ -176,7 +176,7 @@ export default function Home() {
           <TrustCard
             icon={<ShieldCheck className="h-5 w-5 text-accent" />}
             title="Non-custodial"
-            text="Your USDC moves wallet-to-wallet on Solana. We never hold seller funds — only a 10% treasury skim per top-up."
+            text="Your USDC moves wallet-to-wallet on Solana. We never hold seller funds — only a 1% treasury skim per top-up."
           />
           <TrustCard
             icon={<CheckCircle2 className="h-5 w-5 text-success" />}
@@ -197,7 +197,7 @@ export default function Home() {
           <Stat label="Models" value="350+" />
           <Stat label="Settled in" value="USDC" />
           <Stat label="Median savings" value="78%" />
-          <Stat label="Platform fee" value="10%" />
+          <Stat label="Platform fee" value="1%" />
         </div>
       </section>
 

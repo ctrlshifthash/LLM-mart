@@ -37,7 +37,7 @@ export default function SellPage() {
             value="s2"
             number={2}
             title="Earnings"
-            subtitle="You receive 90% of every top-up upfront, on-chain. Platform takes 10% in the same tx."
+            subtitle="You receive 99% of every top-up upfront, on-chain. Platform takes 1% in the same tx."
           >
             <NeedsPrivy><ClientOnly fallback={<Skel />}><AuthGate><SellerEarnings /></AuthGate></ClientOnly></NeedsPrivy>
           </AccordionSection>
@@ -51,7 +51,7 @@ export default function SellPage() {
             <ul className="text-sm text-text-dim space-y-2 leading-relaxed">
               <li>· Your offers compete on price-per-million-tokens. Cheapest live offer with credits wins each request.</li>
               <li>· If your upstream key returns an error, your offer is marked unhealthy for 60s and traffic skips it.</li>
-              <li>· You receive 90% of every top-up upfront, on-chain. Platform takes 10% in the same tx.</li>
+              <li>· You receive 99% of every top-up upfront, on-chain. Platform takes 1% in the same tx.</li>
               <li>· Each offer has a daily USDC cap; once reached, traffic skips to the next cheapest offer.</li>
             </ul>
           </AccordionSection>

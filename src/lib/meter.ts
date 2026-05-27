@@ -4,7 +4,7 @@ import { getPricingForModel } from '@/lib/pricing';
 import { debitCredits } from '@/lib/credits';
 import { eq } from 'drizzle-orm';
 
-const PLATFORM_FEE_RATE = Number(process.env.PLATFORM_FEE_RATE || 0.10);
+const PLATFORM_FEE_RATE = Number(process.env.PLATFORM_FEE_RATE || 0.01);
 
 export type MeterInput = {
   buyerUserId: string;

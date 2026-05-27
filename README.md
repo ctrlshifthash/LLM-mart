@@ -55,7 +55,7 @@
 LLM Mart is a **peer-to-peer marketplace for AI inference**, settled on Solana in USDC.
 
 - **Sellers** hold accounts on OpenRouter, Venice AI, or Uncensored AI with credit they aren't fully using. They list any model from those providers at a price-per-million-tokens of their choosing.
-- **Buyers** pick a seller, click *Buy*, and pay them directly on chain — 90% goes to the seller's wallet, 10% to the platform treasury, in **one signed transaction**.
+- **Buyers** pick a seller, click *Buy*, and pay them directly on chain — 99% goes to the seller's wallet, 1% to the platform treasury, in **one signed transaction**.
 - After topping up, the buyer's `inf_…` API key spends those credits against any OpenAI-compatible client (OpenAI SDK, Anthropic SDK, Claude Code, curl). No popups per request.
 
 There is no escrow, no custodial treasury, no monthly plan, no withdrawal step for sellers. USDC moves wallet → wallet on chain at top-up time, and the gateway routes API calls through whichever seller has the cheapest live credit balance for the requested model.
@@ -68,7 +68,7 @@ People who buy API credit from OpenRouter, Venice, Uncensored, etc. rarely burn 
 
 - **Sellers** recover value they would have otherwise wasted.
 - **Buyers** get the same model output for a fraction of sticker price.
-- **Platform** takes a flat 10% on each top-up — no per-request markup.
+- **Platform** takes a flat 1% on each top-up — no per-request markup.
 
 ---
 
@@ -77,7 +77,7 @@ People who buy API credit from OpenRouter, Venice, Uncensored, etc. rarely burn 
 ### Buyer flow (3 steps)
 
 1. **Browse `/markets`** — every model shows its sellers and their per-million-token price, sorted by discount vs the direct API rate.
-2. **Click *Buy*** on a seller — choose how much USDC of credit to buy, sign **one Phantom transaction**. 90% lands in the seller's wallet, 10% in the treasury, atomically.
+2. **Click *Buy*** on a seller — choose how much USDC of credit to buy, sign **one Phantom transaction**. 99% lands in the seller's wallet, 1% in the treasury, atomically.
 3. **Mint an `inf_…` key** at `/buy` and use it like any OpenAI key. Each request automatically routes to the cheapest seller you hold credit with, debits your balance with that seller, and streams the response back.
 
 When a seller's balance runs out, the API returns `402 insufficient_credits` and the buyer tops up again.
@@ -86,7 +86,7 @@ When a seller's balance runs out, the API returns `402 insufficient_credits` and
 
 1. Go to `/sell` → **Create Offer** → pick model id, choose upstream provider (OpenRouter / Venice / Uncensored), paste your API key (stored AES-GCM encrypted at rest), set your price.
 2. When buyers top up, USDC arrives in your wallet **immediately**, on chain. No payout schedule.
-3. When the routed requests come in, they hit your upstream key. Your margin = your listed price − your actual upstream cost − the 10% platform fee.
+3. When the routed requests come in, they hit your upstream key. Your margin = your listed price − your actual upstream cost − the 1% platform fee.
 
 ### Routing order
 
@@ -114,7 +114,7 @@ flowchart LR
   Seller[Seller wallet]
   Treasury[Treasury wallet]
 
-  Buyer -- 1 Phantom signature: 90% + 10% --> Solana
+  Buyer -- 1 Phantom signature: 99% + 1% --> Solana
   Solana --> Seller
   Solana --> Treasury
 
@@ -154,7 +154,7 @@ flowchart LR
 
 ## Features
 
-- **One-signature credit purchase** — buyer → seller (90%) + buyer → treasury (10%) in a single `Transaction` with two `transferChecked` instructions.
+- **One-signature credit purchase** — buyer → seller (99%) + buyer → treasury (1%) in a single `Transaction` with two `transferChecked` instructions.
 - **OpenAI-compatible streaming** — drop-in for `OpenAI`, `Anthropic`, and `Claude Code` clients via `base_url` override.
 - **Multi-provider routing** — sellers can resell from OpenRouter (any of ~350 models), Venice AI (uncensored Llama / Mistral / etc.), or Uncensored AI (`uncensored-llama-3.3-70b` family).
 - **Smart router** — priority → cheapest marketplace seller w/ credit → fallback. Unhealthy upstreams cool down for 60s.
@@ -199,7 +199,7 @@ Open <http://localhost:3000> and sign in with Phantom or email.
 | `NEXT_PUBLIC_PRIVY_APP_ID` | yes | From the Privy dashboard |
 | `PRIVY_APP_SECRET` | yes | From the Privy dashboard |
 | `MASTER_ENCRYPTION_KEY` | yes | 32 bytes base64. Encrypts seller upstream API keys at rest. Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
-| `TREASURY_PRIVATE_KEY` | yes | Base58 string or JSON array of bytes. Receives the 10% fee. `pnpm gen-keypair` creates one. |
+| `TREASURY_PRIVATE_KEY` | yes | Base58 string or JSON array of bytes. Receives the 1% fee. `pnpm gen-keypair` creates one. |
 | `NEXT_PUBLIC_TREASURY_ADDRESS` | yes | Public key of the treasury wallet |
 | `NEXT_PUBLIC_SOLANA_CLUSTER` | yes | `mainnet-beta` or `devnet` |
 | `NEXT_PUBLIC_USDC_MINT` | yes | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` on mainnet |
@@ -209,7 +209,7 @@ Open <http://localhost:3000> and sign in with Phantom or email.
 | `OPENROUTER_BASE_URL` | no | Defaults to `https://openrouter.ai/api/v1` |
 | `NEXT_PUBLIC_APP_URL` | recommended | Your prod URL (used as `http-referer` on OpenRouter analytics) |
 | `INTERNAL_SHARED_SECRET` | no | Gates `/api/internal/*` helper endpoints. Falls back to `MASTER_ENCRYPTION_KEY` |
-| `PLATFORM_FEE_RATE` | no | Defaults to `0.10` (10%) |
+| `PLATFORM_FEE_RATE` | no | Defaults to `0.01` (1%) |
 | `NEXT_PUBLIC_PLATFORM_FEE_RATE` | no | Same value, exposed to the browser so UI shows the right % |
 | `MIN_CHARGE_USDC` | no | Floor for marketplace pricing per request, defaults to `0.0005` |
 

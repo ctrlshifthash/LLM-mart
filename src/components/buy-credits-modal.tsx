@@ -25,7 +25,7 @@ const RPC =
   process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
   (CLUSTER === 'mainnet-beta' ? 'https://solana-rpc.publicnode.com' : 'https://api.devnet.solana.com');
 const USDC_DECIMALS = 6;
-const PLATFORM_FEE_PCT = Math.round(Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_RATE || 0.10) * 100);
+const PLATFORM_FEE_PCT = Math.round(Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_RATE || 0.01) * 100);
 const EXPLORER = (sig: string) =>
   CLUSTER === 'mainnet-beta' ? `https://solscan.io/tx/${sig}` : `https://solscan.io/tx/${sig}?cluster=devnet`;
 

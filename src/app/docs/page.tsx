@@ -36,7 +36,7 @@ export default function DocsPage() {
 
           <Block n={3} icon={<Coins className="h-4 w-4" />} title="Billing">
             <p className="text-text-dim">
-              Buyer is charged the seller's quoted price per million tokens. Credits are pre-purchased from /markets in USDC. Platform takes a 10% fee at top-up time; the rest goes straight to the seller's wallet.
+              Buyer is charged the seller's quoted price per million tokens. Credits are pre-purchased from /markets in USDC. Platform takes a 1% fee at top-up time; the rest goes straight to the seller's wallet.
             </p>
             <p className="mt-2 text-text-dim">
               When credits with a seller run out, the API returns <code className="font-mono text-warn">402 insufficient_credits</code>.

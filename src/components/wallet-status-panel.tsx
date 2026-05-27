@@ -15,7 +15,7 @@ const RPC =
   (CLUSTER === 'mainnet-beta' ? 'https://solana-rpc.publicnode.com' : 'https://api.devnet.solana.com');
 const USDC_DECIMALS = 6;
 const IS_PUBLIC_RPC = /api\.(mainnet-beta|devnet)\.solana\.com/.test(RPC);
-const PLATFORM_FEE_PCT = Math.round(Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_RATE || 0.10) * 100);
+const PLATFORM_FEE_PCT = Math.round(Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_RATE || 0.01) * 100);
 
 export function WalletStatusPanel() {
   const { user } = usePrivy();

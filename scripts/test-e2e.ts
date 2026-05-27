@@ -1,5 +1,5 @@
 /* Full end-to-end smoke test:
- *   1. Buyer keypair → on-chain credit purchase (buyer → seller 90% + treasury 10% in one tx)
+ *   1. Buyer keypair → on-chain credit purchase (buyer → seller 99% + treasury 1% in one tx)
  *   2. DB credit row updated
  *   3. inf_ API key → /api/inference/v1/chat/completions
  *   4. Final credit balance + token usage
@@ -42,7 +42,7 @@ import {
 import { creditTopUp, getCreditBalance } from '../src/lib/credits';
 import { sha256Hex } from '../src/lib/crypto';
 
-const PLATFORM_FEE_RATE = Number(process.env.PLATFORM_FEE_RATE || 0.10);
+const PLATFORM_FEE_RATE = Number(process.env.PLATFORM_FEE_RATE || 0.01);
 const BASE_URL = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 const required = ['BUYER_PRIVATE_KEY', 'E2E_API_KEY', 'E2E_SELLER_USER_ID'];

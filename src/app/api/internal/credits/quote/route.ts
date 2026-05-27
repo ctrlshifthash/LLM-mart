@@ -7,7 +7,7 @@ import { getTreasuryPublicKey, uiToBaseUnits, USDC_MINT, USDC_DECIMALS } from '@
 
 export const runtime = 'nodejs';
 
-const PLATFORM_FEE_RATE = Number(process.env.PLATFORM_FEE_RATE || 0.10);
+const PLATFORM_FEE_RATE = Number(process.env.PLATFORM_FEE_RATE || 0.01);
 
 export async function POST(req: Request) {
   try {
