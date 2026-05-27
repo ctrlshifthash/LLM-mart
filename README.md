@@ -2,6 +2,10 @@
 
   <h1>LLM Mart</h1>
 
+  <p>
+    <img src="https://static.wixstatic.com/media/e2da02_a5f40692d5d2410299c59326793733a5~mv2.jpg" alt="LLM Mart" width="1500" />
+  </p>
+
   <p><b>The marketplace for AI inference.</b></p>
 
   <p>GPT-4, Claude, Llama, Gemini and 350+ other models — <b>70 to 90% off</b> sticker price.</p>
@@ -11,7 +15,7 @@
 
   <p>
     <a href="https://tryllmmart.com"><img alt="Website" src="https://img.shields.io/badge/website-tryllmmart.com-22d3ee?style=for-the-badge&logo=vercel&logoColor=white" /></a>
-    <a href="https://x.com/LLMmart"><img alt="X" src="https://img.shields.io/badge/X-@LLMmart-000000?style=for-the-badge&logo=x&logoColor=white" /></a>
+    <a href="https://x.com/LLMMart"><img alt="X" src="https://img.shields.io/badge/X-@LLMMart-000000?style=for-the-badge&logo=x&logoColor=white" /></a>
     <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-3b82f6?style=for-the-badge" /></a>
   </p>
 
@@ -329,7 +333,7 @@ If every step green-checks, the full chain — Phantom signing → on-chain spli
 ## Links
 
 - **Live**: [tryllmmart.com](https://tryllmmart.com)
-- **X / Twitter**: [@LLMmart](https://x.com/LLMmart)
+- **X / Twitter**: [@LLMMart](https://x.com/LLMMart)
 - **Issues / PRs**: [github.com/ctrlshifthash/LLM-mart/issues](https://github.com/ctrlshifthash/LLM-mart/issues)
 
 ---

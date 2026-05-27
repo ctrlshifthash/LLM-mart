@@ -149,7 +149,7 @@ function SocialButtons() {
     },
     {
       label: 'X',
-      href: process.env.NEXT_PUBLIC_X_URL || 'https://x.com',
+      href: process.env.NEXT_PUBLIC_X_URL || 'https://x.com/LLMMart',
       tint: 'hover:border-text/60 hover:text-text hover:shadow-[0_8px_24px_-8px_rgba(255,255,255,0.3)]',
       icon: (
         <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden>
@@ -159,7 +159,7 @@ function SocialButtons() {
     },
     {
       label: 'GitHub',
-      href: process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com',
+      href: process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com/ctrlshifthash/LLM-mart',
       tint: 'hover:border-accent-2/60 hover:text-accent-2 hover:shadow-[0_8px_24px_-8px_rgba(129,140,248,0.5)]',
       icon: (
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
