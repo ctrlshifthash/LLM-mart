@@ -24,7 +24,8 @@ type Model = {
   direct: { promptPerM: number; completionPerM: number };
   best: { promptPerM: number; completionPerM: number; sellers: number; capacityUsdc: number };
   savings: number;
-  activity: { messages: number; creditsSold: number; tokens: number };
+  activity: { messages: number; spentUsdc: number; volumeUsdc: number; tokens: number };
+  listedAt: string | null;
 };
 
 type Offer = {
@@ -193,6 +194,8 @@ function ModelRow({
 }: { m: Model; index: number; expanded: boolean; onToggle: () => void; onBuy: (o: Offer) => void }) {
   const savingsPct = Math.round(m.savings * 100);
   const [copied, setCopied] = useState(false);
+  const isNew = m.listedAt ? Date.now() - Date.parse(m.listedAt) < 24 * 60 * 60 * 1000 : false;
+  const listedAgo = m.listedAt ? timeAgo(m.listedAt) : null;
 
   return (
     <div className="group transition-colors fade-up" style={{ animationDelay: `${Math.min(index * 14, 280)}ms` }}>
@@ -206,6 +209,14 @@ function ModelRow({
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-sm font-semibold text-text truncate">{m.id}</span>
+            {isNew && (
+              <span className="inline-flex items-center rounded border border-accent/40 bg-accent/10 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-accent font-semibold">
+                New
+              </span>
+            )}
+            {listedAgo && !isNew && (
+              <span className="text-[10px] text-text-faint" title={`Last listed ${m.listedAt}`}>listed {listedAgo}</span>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -247,7 +258,7 @@ function ModelRow({
 
         <div className="text-right whitespace-nowrap">
           <div className="font-mono text-sm">{formatMessages(m.activity.messages)} msgs</div>
-          <div className="font-mono text-[11px] text-success">${fmt2(m.activity.creditsSold)} sold</div>
+          <div className="font-mono text-[11px] text-success">${fmt2(m.activity.volumeUsdc)} sold</div>
         </div>
 
         <div className="text-text-faint">
@@ -301,11 +312,14 @@ function ExpandedDetail({ m, onBuy }: { m: Model; onBuy: (o: Offer) => void }) {
 
       {/* Stat strip */}
       <div className="px-5 sm:px-8 pb-4 flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-text-faint border-t border-border/40 pt-4">
+        <span>Credits sold <span className="font-mono text-success">${fmt2(m.activity.volumeUsdc)}</span></span>
+        <span>Inference spent <span className="font-mono text-text">${fmt2(m.activity.spentUsdc)}</span></span>
         <span>24h Volume <span className="font-mono text-text">${fmt2(totalSold)}</span></span>
         <span>Sellers <span className="font-mono text-text">{totals.sellers}</span></span>
         <span>Total Capacity <span className="font-mono text-text">${fmt2(totals.totalCapacityUsdc)}</span></span>
         <span>Activity <span className="font-mono text-text">{formatMessages(m.activity.messages)} msgs</span></span>
         <span>Tokens <span className="font-mono text-text">{formatMessages(m.activity.tokens)}</span></span>
+        {m.listedAt && <span>Latest offer <span className="font-mono text-text">{timeAgo(m.listedAt)}</span></span>}
       </div>
 
       {/* Per-seller table */}
@@ -536,6 +550,22 @@ function fmt2(n: number) {
   if (n < 1_000_000) return `${(n / 1000).toFixed(1)}K`;
   return `${(n / 1_000_000).toFixed(1)}M`;
 }
+function timeAgo(iso: string): string {
+  const ms = Date.now() - Date.parse(iso);
+  if (isNaN(ms)) return '';
+  const s = Math.max(1, Math.floor(ms / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d ago`;
+  const mo = Math.floor(d / 30);
+  if (mo < 12) return `${mo}mo ago`;
+  return `${Math.floor(mo / 12)}y ago`;
+}
+
 function formatMessages(n: number): string {
   if (n === 0) return '0';
   if (n < 1000) return String(n);
