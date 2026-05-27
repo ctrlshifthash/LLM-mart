@@ -12,6 +12,7 @@ import { CreditsPanel } from '@/components/credits-panel';
 import { RouterConfigPanel } from '@/components/router-config-panel';
 import { QuickstartCodeBlocks } from '@/components/quickstart-code-blocks';
 import { SavingsPanel } from '@/components/savings-panel';
+import { Playground } from '@/components/playground';
 import { ArrowRight } from 'lucide-react';
 
 export default function BuyPage() {
@@ -69,6 +70,15 @@ export default function BuyPage() {
           <AccordionSection
             value="k4"
             number={4}
+            title="Try it in the browser"
+            subtitle="Paste your inf_ key, type a prompt, hit Send. Streams back here. No popups per request."
+          >
+            <NeedsPrivy><ClientOnly fallback={<Skel />}><AuthGate><Playground /></AuthGate></ClientOnly></NeedsPrivy>
+          </AccordionSection>
+
+          <AccordionSection
+            value="k5"
+            number={5}
             title="Quick Start"
             subtitle="Drop your key into curl, the OpenAI SDK, the Anthropic SDK, or Claude Code."
           >
@@ -76,8 +86,8 @@ export default function BuyPage() {
           </AccordionSection>
 
           <AccordionSection
-            value="k5"
-            number={5}
+            value="k6"
+            number={6}
             title="Your Savings and Purchases"
             subtitle="Every request, what you paid, and what you would've paid going direct."
           >

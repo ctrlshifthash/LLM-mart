@@ -77,14 +77,14 @@ export function WalletStatusPanel() {
 
         <div className="rounded-lg border border-border bg-bg-elevated/40 p-5">
           <div className="flex items-center gap-2 text-xs text-text-faint uppercase tracking-wide">
-            <Zap className="h-3.5 w-3.5" /> Settlement model
+            <Zap className="h-3.5 w-3.5" /> How it works
           </div>
-          <div className="mt-2 text-lg font-medium">Per-request, direct to seller</div>
+          <div className="mt-2 text-lg font-medium">Buy credits once, spend anytime</div>
           <ul className="mt-2 space-y-1 text-[11px] text-text-faint leading-relaxed">
-            <li>• One Phantom signature per chat request.</li>
-            <li>• USDC goes straight from your wallet to the chosen seller.</li>
-            <li>• A {PLATFORM_FEE_PCT}% fee is split to the treasury in the same tx.</li>
-            <li>• Nothing pre-funded, nothing held in escrow.</li>
+            <li>• One Phantom signature buys USDC credit with a seller.</li>
+            <li>• 90% goes to the seller's wallet, {PLATFORM_FEE_PCT}% to the treasury — same tx.</li>
+            <li>• Your API key spends that credit. No popups per request.</li>
+            <li>• When it runs out, top up the seller again.</li>
           </ul>
         </div>
       </div>
