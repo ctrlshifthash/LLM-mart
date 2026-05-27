@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Zap } from 'lucide-react';
+import { BRAND_LOGO_URL } from '@/lib/brand';
 
 const SESSION_KEY = 'llmart-splash-shown';
 const MIN_DURATION = 900;
@@ -57,8 +57,12 @@ export function SplashScreen() {
         <div className="relative">
           <div className="absolute -inset-8 rounded-full bg-accent/20 blur-2xl animate-pulse" />
           <div className="absolute inset-0 rounded-full bg-accent/40 blur-xl float" />
-          <div className="relative flex items-center justify-center h-16 w-16 rounded-2xl border border-accent/40 bg-bg-card/80 backdrop-blur">
-            <Zap className="h-7 w-7 text-accent drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
+          <div className="relative flex items-center justify-center h-20 w-20 rounded-2xl border border-accent/40 bg-bg-card/80 backdrop-blur overflow-hidden">
+            <img
+              src={BRAND_LOGO_URL}
+              alt="LLM Mart"
+              className="h-full w-full object-cover drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]"
+            />
           </div>
         </div>
         <div className="mt-6 text-center">

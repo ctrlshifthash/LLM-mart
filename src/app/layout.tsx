@@ -7,6 +7,7 @@ import { Nav } from '@/components/nav';
 import { Footer } from '@/components/footer';
 import { SplashScreen } from '@/components/splash-screen';
 import { Toaster } from 'sonner';
+import { BRAND_LOGO_URL } from '@/lib/brand';
 
 const inter = Inter({ variable: '--font-sans-inter', subsets: ['latin'] });
 const mono = JetBrains_Mono({ variable: '--font-mono-jb', subsets: ['latin'] });
@@ -15,6 +16,21 @@ export const metadata: Metadata = {
   title: 'LLM Mart — The marketplace for AI inference',
   description:
     'Buy AI inference from people with leftover OpenRouter, Venice, or Uncensored credits. Pay 70-90% less for the same models, settled onchain in USDC on Solana.',
+  icons: {
+    icon: BRAND_LOGO_URL,
+    shortcut: BRAND_LOGO_URL,
+    apple: BRAND_LOGO_URL,
+  },
+  openGraph: {
+    title: 'LLM Mart — The marketplace for AI inference',
+    description: 'Buy AI inference from people with leftover OpenRouter, Venice, or Uncensored credits. Pay in USDC.',
+    images: [BRAND_LOGO_URL],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: [BRAND_LOGO_URL],
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

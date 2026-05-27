@@ -4,7 +4,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { cn, shortAddr } from '@/lib/utils';
-import { Zap, LogOut, ChevronRight } from 'lucide-react';
+import { LogOut, ChevronRight } from 'lucide-react';
+import { BRAND_LOGO_URL } from '@/lib/brand';
 
 const TABS = [
   { href: '/', label: 'Home' },
@@ -41,9 +42,13 @@ export function Nav() {
       <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-6">
         {/* Logo (left) */}
         <Link href="/" className="flex items-center gap-2 group justify-self-start">
-          <div className="relative">
-            <Zap className="h-5 w-5 text-accent transition-transform group-hover:scale-110 group-hover:rotate-12" />
-            <div className="absolute inset-0 blur-md bg-accent/60 -z-10 group-hover:bg-accent/80 transition-colors" />
+          <div className="relative h-7 w-7">
+            <img
+              src={BRAND_LOGO_URL}
+              alt="LLM Mart"
+              className="h-7 w-7 rounded-md object-cover transition-transform group-hover:scale-110"
+            />
+            <div className="absolute inset-0 rounded-md blur-md bg-accent/30 -z-10 group-hover:bg-accent/50 transition-colors" />
           </div>
           <span className="font-mono text-sm font-semibold tracking-tight">
             LLM <span className="text-accent">Mart</span>
