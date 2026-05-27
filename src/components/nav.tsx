@@ -136,7 +136,7 @@ function SocialButtons() {
   const items: { label: string; href: string; icon: React.ReactNode; tint: string }[] = [
     {
       label: 'Pump.fun',
-      href: process.env.NEXT_PUBLIC_PUMPFUN_URL || 'https://pump.fun',
+      href: process.env.NEXT_PUBLIC_PUMPFUN_URL || 'https://pump.fun/coin/6fcXq2faNhrAKTVZNJs7GPn1Ckbz12p2KZQwTuL5pump',
       tint: 'hover:border-success/60 hover:text-success hover:shadow-[0_8px_24px_-8px_rgba(74,222,128,0.5)]',
       icon: (
         <img
