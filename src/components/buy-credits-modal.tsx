@@ -43,6 +43,8 @@ type Props = {
   onPurchased?: (info: { balance: number; txHash: string }) => void;
 };
 
+type HolderInfo = { isHolder: boolean; balance: string; mint: string; discount: number };
+
 export function BuyCreditsModal({ open, onClose, modelId, offer, onPurchased }: Props) {
   const { wallets } = useWallets();
   const { signAndSendTransaction } = useSignAndSendTransaction();
@@ -54,10 +56,21 @@ export function BuyCreditsModal({ open, onClose, modelId, offer, onPurchased }: 
   const [step, setStep] = useState<string>('');
   const [walletUsdc, setWalletUsdc] = useState<number | null>(null);
   const [tx, setTx] = useState<string | null>(null);
+  const [holder, setHolder] = useState<HolderInfo | null>(null);
 
   useEffect(() => {
-    if (!open) { setStep(''); setTx(null); }
-  }, [open]);
+    if (!open) { setStep(''); setTx(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await authedFetch('/api/internal/holder');
+        if (!r.ok) return;
+        const j = (await r.json()) as HolderInfo;
+        if (!cancelled) setHolder(j);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [open, authedFetch]);
 
   useEffect(() => {
     if (!wallet?.address) return;
@@ -83,7 +96,9 @@ export function BuyCreditsModal({ open, onClose, modelId, offer, onPurchased }: 
   if (!offer) return null;
 
   const amt = Number(amount);
-  const fee = +(amt * (PLATFORM_FEE_PCT / 100)).toFixed(6);
+  const isHolder = !!holder?.isHolder;
+  const effectiveFeePct = isHolder ? PLATFORM_FEE_PCT * (1 - (holder?.discount ?? 0.5)) : PLATFORM_FEE_PCT;
+  const fee = +(amt * (effectiveFeePct / 100)).toFixed(6);
   const sellerGets = +(amt - fee).toFixed(6);
 
   async function buy() {
@@ -219,9 +234,35 @@ export function BuyCreditsModal({ open, onClose, modelId, offer, onPurchased }: 
             </div>
           </div>
 
+          {isHolder && (
+            <div className="rounded-md border border-success/40 bg-success/5 p-3 text-xs flex items-center justify-between">
+              <span className="inline-flex items-center gap-2">
+                <Badge variant="success">$LLMMart Holder</Badge>
+                <span className="text-text-dim">50% off platform fee</span>
+              </span>
+              <span className="font-mono text-success">{effectiveFeePct.toFixed(2)}% fee</span>
+            </div>
+          )}
+          {!isHolder && holder && (
+            <div className="rounded-md border border-border/70 bg-bg-elevated/40 p-3 text-[11px] text-text-faint flex items-center justify-between">
+              <span>Hold $LLMMart and get 50% off the platform fee.</span>
+              <a
+                href={`https://pump.fun/coin/${holder.mint}`}
+                target="_blank" rel="noreferrer"
+                className="text-accent hover:underline"
+              >Buy $LLMMart →</a>
+            </div>
+          )}
+
           <div className="rounded-md border border-border bg-bg-elevated/40 p-3 text-xs space-y-1">
             <div className="flex justify-between"><span className="text-text-faint">Seller receives</span><span className="font-mono">{formatUsdc(sellerGets, { digits: 4 })}</span></div>
-            <div className="flex justify-between"><span className="text-text-faint">Platform fee ({PLATFORM_FEE_PCT}%)</span><span className="font-mono">{formatUsdc(fee, { digits: 4 })}</span></div>
+            <div className="flex justify-between">
+              <span className="text-text-faint">
+                Platform fee ({effectiveFeePct.toFixed(2)}%)
+                {isHolder && <span className="ml-1 text-success">· holder discount</span>}
+              </span>
+              <span className="font-mono">{formatUsdc(fee, { digits: 4 })}</span>
+            </div>
             <div className="flex justify-between border-t border-border pt-1 mt-1"><span className="text-text-faint">You pay (one tx)</span><span className="font-mono">{formatUsdc(amt, { digits: 4 })}</span></div>
             <div className="flex justify-between"><span className="text-text-faint">Credits you receive</span><Badge variant="accent" className="font-mono">{formatUsdc(amt, { digits: 4 })}</Badge></div>
           </div>

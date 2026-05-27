@@ -20,6 +20,14 @@ export const RPC_URL =
 
 export const USDC_DECIMALS = 6;
 
+// $LLMMart governance/discount token (Pump.fun). Holders get a 50% platform-fee discount.
+export const LLM_MART_TOKEN_MINT = new PublicKey(
+  process.env.NEXT_PUBLIC_LLM_MART_TOKEN_MINT || '23U9HMncAwYRHTxuH32nHJHmVwXkEJyZ2Bxub8pKpump',
+);
+// Minimum balance (base units) required to count as a holder. Default = any positive holding.
+export const LLM_MART_MIN_HOLD = BigInt(process.env.LLM_MART_MIN_HOLD || '1');
+export const LLM_MART_HOLDER_DISCOUNT = 0.5; // 50% off the platform fee for holders
+
 export function getConnection(): Connection {
   return new Connection(RPC_URL, 'confirmed');
 }
@@ -110,6 +118,22 @@ export async function sendUsdc(to: PublicKey, amountUi: number): Promise<string>
   );
   const tx = new Transaction().add(ix);
   return await sendAndConfirmTransaction(conn, tx, [payer]);
+}
+
+export async function getLLMMartHolding(walletAddress: string): Promise<bigint> {
+  try {
+    const conn = getConnection();
+    const owner = new PublicKey(walletAddress);
+    const ata = (await import('@solana/spl-token')).getAssociatedTokenAddressSync(LLM_MART_TOKEN_MINT, owner);
+    const acc = await getAccount(conn, ata);
+    return acc.amount;
+  } catch {
+    return BigInt(0);
+  }
+}
+
+export function isLLMMartHolder(balance: bigint): boolean {
+  return balance >= LLM_MART_MIN_HOLD && balance > BigInt(0);
 }
 
 export async function verifyCreditPurchase(opts: {

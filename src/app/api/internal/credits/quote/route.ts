@@ -3,7 +3,10 @@ import { users, offers } from '@/lib/db/schema';
 import { getAuthedUser } from '@/lib/privy';
 import { ok, err, fromError } from '@/lib/api';
 import { eq } from 'drizzle-orm';
-import { getTreasuryPublicKey, uiToBaseUnits, USDC_MINT, USDC_DECIMALS } from '@/lib/chain';
+import {
+  getTreasuryPublicKey, uiToBaseUnits, USDC_MINT, USDC_DECIMALS,
+  getLLMMartHolding, isLLMMartHolder, LLM_MART_HOLDER_DISCOUNT,
+} from '@/lib/chain';
 
 export const runtime = 'nodejs';
 
@@ -39,7 +42,12 @@ export async function POST(req: Request) {
     if (!seller) return err(404, 'not_found', 'seller not found');
     if (!seller.wallet) return err(400, 'seller_no_wallet', 'seller has no payout wallet');
 
-    const feeUi = +(amount * PLATFORM_FEE_RATE).toFixed(8);
+    // 50% discount on platform fee if the buyer holds $LLMMart.
+    const holding = await getLLMMartHolding(u.walletAddress);
+    const isHolder = isLLMMartHolder(holding);
+    const effectiveFeeRate = isHolder ? PLATFORM_FEE_RATE * (1 - LLM_MART_HOLDER_DISCOUNT) : PLATFORM_FEE_RATE;
+
+    const feeUi = +(amount * effectiveFeeRate).toFixed(8);
     const sellerUi = +(amount - feeUi).toFixed(8);
     const sellerBase = uiToBaseUnits(sellerUi);
     const feeBase = uiToBaseUnits(feeUi);
@@ -57,6 +65,9 @@ export async function POST(req: Request) {
       sellerAmountBase: sellerBase.toString(),
       feeAmountBase: feeBase.toString(),
       sellerUserId: seller.id,
+      isHolder,
+      effectiveFeeRate,
+      llmMartBalance: holding.toString(),
     });
   } catch (e) {
     return fromError(e);
