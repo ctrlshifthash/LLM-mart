@@ -1,31 +1,42 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import useSWR from 'swr';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Select } from '@/components/ui/select';
 import { useAuthedSWR } from '@/lib/authed-fetch';
-import { fetcher } from '@/lib/fetcher';
-import { Zap, Send } from 'lucide-react';
+import { Zap, Send, ArrowRight } from 'lucide-react';
 
 const KEY_STORAGE = 'llmart-inf-key';
 
-type CreditRow = { sellerUserId: string; sellerWallet: string | null; balance: number };
-type Offer = { id: string; sellerUserId: string; sellerWallet: string | null; priceInPerM: number; priceOutPerM: number; provider: string };
+type UsableModel = {
+  modelId: string;
+  sellerUserId: string;
+  sellerWallet: string | null;
+  priceInPerM: number;
+  priceOutPerM: number;
+  provider: string;
+  balance: number;
+};
 
 export function Playground() {
-  const { data: credits } = useAuthedSWR<{ credits: CreditRow[] }>('/api/internal/credits', { refreshInterval: 5000 });
+  const { data, isLoading } = useAuthedSWR<{ models: UsableModel[] }>(
+    '/api/internal/credits/models',
+    { refreshInterval: 8000 },
+  );
+  const usable = useMemo(() => data?.models ?? [], [data]);
+
   const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('openai/gpt-4o-mini');
+  const [selectedKey, setSelectedKey] = useState<string>('');
   const [prompt, setPrompt] = useState('Reply with the single word "ok".');
   const [output, setOutput] = useState('');
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string>('');
   const outRef = useRef<HTMLDivElement | null>(null);
 
-  // Pull last-used key from sessionStorage on mount so the user doesn't paste twice.
   useEffect(() => {
     try { const s = sessionStorage.getItem(KEY_STORAGE); if (s) setApiKey(s); } catch { /* ignore */ }
   }, []);
@@ -33,55 +44,59 @@ export function Playground() {
     try { if (apiKey) sessionStorage.setItem(KEY_STORAGE, apiKey); } catch { /* ignore */ }
   }, [apiKey]);
 
-  // Suggest a model based on whichever seller the buyer holds credit with: fetch their offers
-  // for the model dropdown.
-  const firstSellerCredit = credits?.credits.find((c) => c.balance > 0);
-  const totalCredits = credits?.credits.reduce((acc, c) => acc + c.balance, 0) ?? 0;
-
+  // Auto-pick the cheapest usable model as soon as one is available.
   useEffect(() => {
-    if (outRef.current) outRef.current.scrollTop = outRef.current.scrollHeight;
-  }, [output]);
+    if (usable.length > 0 && !selectedKey) {
+      const first = usable[0];
+      setSelectedKey(`${first.modelId}__${first.sellerUserId}`);
+    }
+  }, [usable, selectedKey]);
+
+  const chosen = useMemo(
+    () => usable.find((u) => `${u.modelId}__${u.sellerUserId}` === selectedKey) || null,
+    [usable, selectedKey],
+  );
+
+  useEffect(() => { if (outRef.current) outRef.current.scrollTop = outRef.current.scrollHeight; }, [output]);
+
+  const totalCredits = usable.reduce((acc, u) => acc + u.balance, 0);
+  const hasCredits = totalCredits > 0;
 
   async function run() {
     if (busy) return;
     if (!apiKey || !apiKey.startsWith('inf_')) {
       return toast.error('Paste an inf_ key from section 1 above.');
     }
+    if (!chosen) return toast.error('No model selected.');
     if (!prompt.trim()) return toast.error('Type something to send.');
 
     setBusy(true);
     setOutput('');
-    setStatus('Sending…');
+    setStatus(`Sending to ${chosen.modelId}…`);
 
     try {
       const res = await fetch('/api/inference/v1/chat/completions', {
         method: 'POST',
         headers: { 'authorization': `Bearer ${apiKey}`, 'content-type': 'application/json' },
         body: JSON.stringify({
-          model,
+          model: chosen.modelId,
           stream: true,
           messages: [{ role: 'user', content: prompt }],
         }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({} as any));
-        const msg = j?.error?.message || `request failed (${res.status})`;
-        if (res.status === 402) setStatus('No credits with any seller for this model — buy more on /markets.');
-        else setStatus('Failed.');
-        toast.error(msg);
+        toast.error(j?.error?.message || `request failed (${res.status})`);
+        setStatus('Failed.');
         return;
       }
       const ct = res.headers.get('content-type') || '';
       if (!ct.includes('text/event-stream')) {
         const txt = await res.text();
-        try {
-          const j = JSON.parse(txt);
-          setOutput(j?.choices?.[0]?.message?.content || txt);
-        } catch { setOutput(txt); }
+        try { setOutput(JSON.parse(txt)?.choices?.[0]?.message?.content || txt); } catch { setOutput(txt); }
         setStatus('Done.');
         return;
       }
-
       setStatus('Streaming…');
       const reader = res.body!.getReader();
       const dec = new TextDecoder();
@@ -113,16 +128,32 @@ export function Playground() {
     }
   }
 
+  // ── Empty state ───────────────────────────────────────────────
+  if (!isLoading && !hasCredits) {
+    return (
+      <div className="rounded-md border border-warn/30 bg-warn/5 p-5 text-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <Badge variant="warn">No credit yet</Badge>
+          <span className="text-text-dim">Buy credit with a seller first, then come back here.</span>
+        </div>
+        <Link
+          href="/markets"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-black hover:bg-accent/90"
+        >
+          Browse marketplace <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-border/70 bg-bg-elevated/40 p-3 text-xs flex items-center gap-3">
-        <Badge variant={totalCredits > 0 ? 'success' : 'warn'}>
-          {totalCredits > 0 ? `$${totalCredits.toFixed(4)} credit` : 'No credit yet'}
-        </Badge>
+      <div className="rounded-md border border-success/30 bg-success/5 p-3 text-xs flex items-center gap-3 flex-wrap">
+        <Badge variant="success">${totalCredits.toFixed(4)} total credit</Badge>
         <span className="text-text-faint">
-          {totalCredits > 0
-            ? 'Each request will debit one of your sellers at their listed per-million-token price.'
-            : 'Buy credit with a seller on /markets first, then come back to test it here.'}
+          {usable.length} usable model{usable.length === 1 ? '' : 's'} across{' '}
+          {new Set(usable.map((u) => u.sellerUserId)).size} seller
+          {new Set(usable.map((u) => u.sellerUserId)).size === 1 ? '' : 's'}.
         </span>
       </div>
 
@@ -136,19 +167,24 @@ export function Playground() {
             onChange={(e) => setApiKey(e.target.value.trim())}
             type="password"
           />
-          <p className="mt-1 text-[10px] text-text-faint">Paste a secret from section 1 above. Stored only in this browser tab.</p>
+          <p className="mt-1 text-[10px] text-text-faint">From section 1 above. Stored only in this browser tab.</p>
         </div>
         <div>
-          <Label>Model</Label>
-          <Input
-            mono
-            placeholder="openai/gpt-4o-mini"
-            value={model}
-            onChange={(e) => setModel(e.target.value.trim())}
-          />
-          <p className="mt-1 text-[10px] text-text-faint">
-            Use a model id offered by a seller you hold credit with. <a href="/markets" className="text-accent hover:underline">Browse /markets</a>.
-          </p>
+          <Label>Model (auto-routes to your credit)</Label>
+          <Select value={selectedKey} onChange={(e) => setSelectedKey(e.target.value)}>
+            {usable.map((u) => (
+              <option key={`${u.modelId}__${u.sellerUserId}`} value={`${u.modelId}__${u.sellerUserId}`}>
+                {u.modelId} · ${u.priceInPerM.toFixed(2)}/${u.priceOutPerM.toFixed(2)} per M · ${u.balance.toFixed(4)} credit
+              </option>
+            ))}
+          </Select>
+          {chosen && (
+            <p className="mt-1 text-[10px] text-text-faint">
+              Routes to seller{' '}
+              <span className="font-mono">{chosen.sellerWallet?.slice(0, 6)}…{chosen.sellerWallet?.slice(-4)}</span>{' '}
+              via <span className="font-mono">{chosen.provider}</span>.
+            </p>
+          )}
         </div>
       </div>
 
@@ -163,10 +199,14 @@ export function Playground() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button onClick={run} disabled={busy}>
+        <Button onClick={run} disabled={busy || !chosen}>
           <Zap className="h-4 w-4" /> {busy ? 'Working…' : 'Send'}
         </Button>
-        {status && <span className="text-xs text-text-faint inline-flex items-center gap-1"><Send className="h-3 w-3" />{status}</span>}
+        {status && (
+          <span className="text-xs text-text-faint inline-flex items-center gap-1">
+            <Send className="h-3 w-3" />{status}
+          </span>
+        )}
       </div>
 
       <div
@@ -177,13 +217,6 @@ export function Playground() {
           {output || (busy ? '' : 'Response will stream here…')}
         </pre>
       </div>
-
-      {firstSellerCredit && (
-        <p className="text-[10px] text-text-faint">
-          Auto-routes to: <span className="font-mono">{firstSellerCredit.sellerWallet?.slice(0, 6)}…{firstSellerCredit.sellerWallet?.slice(-4)}</span> ·
-          ${firstSellerCredit.balance.toFixed(4)} remaining
-        </p>
-      )}
     </div>
   );
 }
